@@ -20,6 +20,12 @@ const ServicesPage = ({ user }) => {
   const [serviceName, setServiceName] = useState("");
   const [subServices, setSubServices] = useState([]);
   const [newSubService, setNewSubService] = useState("");
+  
+  // Alert dialog states
+  const [archiveAlertOpen, setArchiveAlertOpen] = useState(false);
+  const [restoreAlertOpen, setRestoreAlertOpen] = useState(false);
+  const [serviceToArchive, setServiceToArchive] = useState(null);
+  const [serviceToRestore, setServiceToRestore] = useState(null);
 
   useEffect(() => {
     fetchServices();
