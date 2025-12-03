@@ -637,6 +637,37 @@ const MailDetailPage = ({ user }) => {
                 </CardContent>
               </Card>
 
+              {/* Related Mails */}
+              {mail?.related_mails && mail.related_mails.length > 0 && (
+                <Card className="border-0 shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Échanges liés</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {mail.related_mails.map((relatedMail) => (
+                        <div
+                          key={relatedMail.id}
+                          data-testid={`related-mail-${relatedMail.id}`}
+                          className="p-3 bg-slate-50 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors"
+                          onClick={() => navigate(`/mail/${relatedMail.id}`)}
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <Badge variant={relatedMail.type === "entrant" ? "default" : "secondary"} className="text-xs">
+                              {relatedMail.type === "entrant" ? "Entrant" : "Sortant"}
+                            </Badge>
+                            <ExternalLink className="h-3 w-3 text-slate-400" />
+                          </div>
+                          <p className="text-xs font-mono text-slate-600 mb-1">{relatedMail.reference}</p>
+                          <p className="text-sm font-medium text-slate-900 line-clamp-2">{relatedMail.subject}</p>
+                          <p className="text-xs text-slate-500 mt-1">{formatDate(relatedMail.created_at)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Info */}
               <Card className="border-0 shadow-sm">
                 <CardHeader>
@@ -647,6 +678,15 @@ const MailDetailPage = ({ user }) => {
                     <span className="text-slate-600">Créé le:</span>
                     <p className="font-medium">{formatDate(mail?.created_at)}</p>
                   </div>
+                  {mail?.parent_mail_reference && (
+                    <>
+                      <Separator />
+                      <div>
+                        <span className="text-slate-600">En réponse à:</span>
+                        <p className="font-medium text-blue-600">{mail.parent_mail_reference}</p>
+                      </div>
+                    </>
+                  )}
                   {mail?.opened_by_name && (
                     <>
                       <Separator />
