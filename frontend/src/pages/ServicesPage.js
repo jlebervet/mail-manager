@@ -97,17 +97,38 @@ const ServicesPage = ({ user }) => {
   };
 
   const handleDelete = async (serviceId) => {
-    if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce service ?")) {
+    // Get service details for confirmation
+    const service = services.find(s => s.id === serviceId);
+    
+    const confirmMessage = `⚠️ ARCHIVAGE DU SERVICE\n\n` +
+      `Vous êtes sur le point d'archiver le service "${service?.name}".\n\n` +
+      `Cette action va :\n` +
+      `• Archiver le service (il n'apparaîtra plus dans les listes actives)\n` +
+      `• Archiver tous les courriers associés à ce service\n` +
+      `• Conserver toutes les données (archivage, pas de suppression définitive)\n\n` +
+      `Vous pourrez restaurer ce service ultérieurement si nécessaire.\n\n` +
+      `Confirmez-vous l'archivage de ce service ?`;
+    
+    if (!window.confirm(confirmMessage)) {
       return;
     }
 
     try {
-      await axios.delete(`${API}/services/${serviceId}`);
-      toast.success("Service supprimé");
+      const response = await axios.delete(`${API}/services/${serviceId}`);
+      
+      if (response.data.archived_mails > 0) {
+        toast.success(
+          `Service archivé avec succès. ${response.data.archived_mails} courrier(s) associé(s) également archivé(s).`,
+          { duration: 5000 }
+        );
+      } else {
+        toast.success("Service archivé avec succès");
+      }
+      
       fetchServices();
     } catch (error) {
-      console.error("Error deleting service:", error);
-      toast.error("Erreur lors de la suppression");
+      console.error("Error archiving service:", error);
+      toast.error("Erreur lors de l'archivage du service");
     }
   };
 
