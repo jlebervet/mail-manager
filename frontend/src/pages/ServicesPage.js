@@ -372,7 +372,7 @@ const ServicesPage = ({ user }) => {
                         data-testid={`restore-service-${service.id}`}
                         size="sm"
                         variant="ghost"
-                        onClick={() => handleRestore(service.id)}
+                        onClick={() => openRestoreDialog(service.id)}
                         className="text-green-600 hover:text-green-700"
                       >
                         <RotateCcw className="h-4 w-4" />
