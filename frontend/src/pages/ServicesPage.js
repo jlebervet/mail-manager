@@ -407,6 +407,75 @@ const ServicesPage = ({ user }) => {
           )}
         </div>
       )}
+
+      {/* Archive Confirmation Dialog */}
+      <AlertDialog open={archiveAlertOpen} onOpenChange={setArchiveAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Archive className="h-5 w-5 text-amber-600" />
+              Archivage du service
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3 pt-2">
+              <p className="font-medium text-slate-900">
+                Vous êtes sur le point d'archiver le service "{serviceToArchive?.name}".
+              </p>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-2">
+                <p className="text-sm font-medium text-amber-900">Cette action va :</p>
+                <ul className="text-sm text-amber-800 space-y-1 ml-4">
+                  <li>• Archiver le service (il n'apparaîtra plus dans les listes actives)</li>
+                  <li>• Archiver tous les courriers associés à ce service</li>
+                  <li>• Conserver toutes les données (pas de suppression définitive)</li>
+                </ul>
+              </div>
+              <p className="text-sm text-slate-600">
+                Vous pourrez restaurer ce service ultérieurement si nécessaire.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleArchiveConfirm}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              Confirmer l'archivage
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Restore Confirmation Dialog */}
+      <AlertDialog open={restoreAlertOpen} onOpenChange={setRestoreAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <RotateCcw className="h-5 w-5 text-green-600" />
+              Restauration du service
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3 pt-2">
+              <p className="font-medium text-slate-900">
+                Voulez-vous restaurer le service "{serviceToRestore?.name}" ?
+              </p>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <p className="text-sm text-green-800">
+                  Le service sera de nouveau visible et accessible dans les listes actives.
+                  Les courriers archivés avec ce service resteront archivés.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRestoreConfirm}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Restaurer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
