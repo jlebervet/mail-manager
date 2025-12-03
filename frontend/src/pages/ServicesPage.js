@@ -6,7 +6,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, Building2 } from "lucide-react";
+import { Plus, Edit, Trash2, Building2, Archive, RotateCcw } from "lucide-react";
 import { API } from "../App";
 import { Badge } from "../components/ui/badge";
 
