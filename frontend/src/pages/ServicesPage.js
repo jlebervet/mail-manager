@@ -36,6 +36,32 @@ const ServicesPage = ({ user }) => {
     }
   };
 
+  const fetchArchivedServices = async () => {
+    try {
+      const response = await axios.get(`${API}/services?include_archived=true`);
+      const archived = response.data.filter(s => s.archived);
+      setArchivedServices(archived);
+    } catch (error) {
+      console.error("Error fetching archived services:", error);
+    }
+  };
+
+  const handleRestore = async (serviceId) => {
+    if (!window.confirm("Voulez-vous restaurer ce service ?")) {
+      return;
+    }
+
+    try {
+      await axios.post(`${API}/services/${serviceId}/restore`);
+      toast.success("Service restauré avec succès");
+      fetchServices();
+      fetchArchivedServices();
+    } catch (error) {
+      console.error("Error restoring service:", error);
+      toast.error("Erreur lors de la restauration");
+    }
+  };
+
   const openDialog = (service = null) => {
     if (service) {
       setEditingService(service);
