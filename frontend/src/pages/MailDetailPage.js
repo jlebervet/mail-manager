@@ -342,15 +342,28 @@ const MailDetailPage = ({ user }) => {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Retour
         </Button>
-        <Button
-          data-testid="save-mail-button"
-          onClick={handleSave}
-          disabled={loading}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          <Save className="mr-2 h-4 w-4" />
-          {isNew ? "Créer" : "Enregistrer"}
-        </Button>
+        <div className="flex gap-2">
+          {!isNew && mail?.type === "entrant" && (
+            <Button
+              data-testid="reply-mail-button"
+              onClick={handleReply}
+              variant="outline"
+              className="border-blue-600 text-blue-600 hover:bg-blue-50"
+            >
+              <Reply className="mr-2 h-4 w-4" />
+              Répondre (Courrier sortant)
+            </Button>
+          )}
+          <Button
+            data-testid="save-mail-button"
+            onClick={handleSave}
+            disabled={loading}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <Save className="mr-2 h-4 w-4" />
+            {isNew ? "Créer" : "Enregistrer"}
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
