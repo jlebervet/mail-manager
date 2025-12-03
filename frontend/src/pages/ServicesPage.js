@@ -134,25 +134,17 @@ const ServicesPage = ({ user }) => {
     }
   };
 
-  const handleDelete = async (serviceId) => {
-    // Get service details for confirmation
+  const openArchiveDialog = (serviceId) => {
     const service = services.find(s => s.id === serviceId);
-    
-    const confirmMessage = `⚠️ ARCHIVAGE DU SERVICE\n\n` +
-      `Vous êtes sur le point d'archiver le service "${service?.name}".\n\n` +
-      `Cette action va :\n` +
-      `• Archiver le service (il n'apparaîtra plus dans les listes actives)\n` +
-      `• Archiver tous les courriers associés à ce service\n` +
-      `• Conserver toutes les données (archivage, pas de suppression définitive)\n\n` +
-      `Vous pourrez restaurer ce service ultérieurement si nécessaire.\n\n` +
-      `Confirmez-vous l'archivage de ce service ?`;
-    
-    if (!window.confirm(confirmMessage)) {
-      return;
-    }
+    setServiceToArchive(service);
+    setArchiveAlertOpen(true);
+  };
+
+  const handleArchiveConfirm = async () => {
+    if (!serviceToArchive) return;
 
     try {
-      const response = await axios.delete(`${API}/services/${serviceId}`);
+      const response = await axios.delete(`${API}/services/${serviceToArchive.id}`);
       
       if (response.data.archived_mails > 0) {
         toast.success(
@@ -164,6 +156,8 @@ const ServicesPage = ({ user }) => {
       }
       
       fetchServices();
+      setArchiveAlertOpen(false);
+      setServiceToArchive(null);
     } catch (error) {
       console.error("Error archiving service:", error);
       toast.error("Erreur lors de l'archivage du service");
