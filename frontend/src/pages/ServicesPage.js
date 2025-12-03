@@ -53,16 +53,22 @@ const ServicesPage = ({ user }) => {
     }
   };
 
-  const handleRestore = async (serviceId) => {
-    if (!window.confirm("Voulez-vous restaurer ce service ?")) {
-      return;
-    }
+  const openRestoreDialog = (serviceId) => {
+    const service = archivedServices.find(s => s.id === serviceId);
+    setServiceToRestore(service);
+    setRestoreAlertOpen(true);
+  };
+
+  const handleRestoreConfirm = async () => {
+    if (!serviceToRestore) return;
 
     try {
-      await axios.post(`${API}/services/${serviceId}/restore`);
+      await axios.post(`${API}/services/${serviceToRestore.id}/restore`);
       toast.success("Service restauré avec succès");
       fetchServices();
       fetchArchivedServices();
+      setRestoreAlertOpen(false);
+      setServiceToRestore(null);
     } catch (error) {
       console.error("Error restoring service:", error);
       toast.error("Erreur lors de la restauration");
