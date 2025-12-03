@@ -262,58 +262,144 @@ const ServicesPage = ({ user }) => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {services.map((service) => (
-          <Card key={service.id} data-testid={`service-card-${service.id}`} className="border-0 shadow-sm card-hover">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Building2 className="w-5 h-5 text-blue-600" />
+      {/* Toggle archived view */}
+      {isAdmin && (
+        <div className="flex items-center gap-2 mb-4">
+          <Button
+            variant={showArchived ? "default" : "outline"}
+            onClick={() => setShowArchived(!showArchived)}
+            data-testid="toggle-archived-button"
+          >
+            <Archive className="mr-2 h-4 w-4" />
+            {showArchived ? "Masquer les archives" : "Voir les archives"}
+          </Button>
+          {showArchived && archivedServices.length > 0 && (
+            <span className="text-sm text-slate-600">
+              {archivedServices.length} service(s) archivé(s)
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Active Services */}
+      {!showArchived && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {services.map((service) => (
+            <Card key={service.id} data-testid={`service-card-${service.id}`} className="border-0 shadow-sm card-hover">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <Building2 className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <CardTitle className="text-lg">{service.name}</CardTitle>
                   </div>
-                  <CardTitle className="text-lg">{service.name}</CardTitle>
+                  {isAdmin && (
+                    <div className="flex gap-1">
+                      <Button
+                        data-testid={`edit-service-${service.id}`}
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => openDialog(service)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        data-testid={`delete-service-${service.id}`}
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDelete(service.id)}
+                      >
+                        <Archive className="h-4 w-4 text-amber-600" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
-                {isAdmin && (
-                  <div className="flex gap-1">
-                    <Button
-                      data-testid={`edit-service-${service.id}`}
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => openDialog(service)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      data-testid={`delete-service-${service.id}`}
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleDelete(service.id)}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-600" />
-                    </Button>
+              </CardHeader>
+              <CardContent>
+                {service.sub_services && service.sub_services.length > 0 ? (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-slate-700 mb-2">Sous-services:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {service.sub_services.map((ss) => (
+                        <Badge key={ss.id} variant="outline" className="text-xs">
+                          {ss.name}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
+                ) : (
+                  <p className="text-sm text-slate-500">Aucun sous-service</p>
                 )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              {service.sub_services && service.sub_services.length > 0 ? (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-slate-700 mb-2">Sous-services:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {service.sub_services.map((ss) => (
-                      <Badge key={ss.id} variant="outline" className="text-xs">
-                        {ss.name}
-                      </Badge>
-                    ))}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Archived Services */}
+      {showArchived && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {archivedServices.length === 0 ? (
+            <Card className="col-span-full border-0 shadow-sm">
+              <CardContent className="py-12">
+                <p className="text-center text-slate-500">Aucun service archivé</p>
+              </CardContent>
+            </Card>
+          ) : (
+            archivedServices.map((service) => (
+              <Card key={service.id} data-testid={`archived-service-card-${service.id}`} className="border-0 shadow-sm card-hover bg-slate-50">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-slate-200 rounded-lg flex items-center justify-center">
+                        <Archive className="w-5 h-5 text-slate-600" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg text-slate-700">{service.name}</CardTitle>
+                        <Badge variant="secondary" className="mt-1 text-xs">Archivé</Badge>
+                      </div>
+                    </div>
+                    {isAdmin && (
+                      <Button
+                        data-testid={`restore-service-${service.id}`}
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleRestore(service.id)}
+                        className="text-green-600 hover:text-green-700"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
-                </div>
-              ) : (
-                <p className="text-sm text-slate-500">Aucun sous-service</p>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                </CardHeader>
+                <CardContent>
+                  {service.sub_services && service.sub_services.length > 0 ? (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-slate-700 mb-2">Sous-services:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {service.sub_services.map((ss) => (
+                          <Badge key={ss.id} variant="outline" className="text-xs">
+                            {ss.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-500">Aucun sous-service</p>
+                  )}
+                  {service.archived_at && (
+                    <p className="text-xs text-slate-500 mt-3">
+                      Archivé le {new Date(service.archived_at).toLocaleDateString('fr-FR')}
+                      {service.archived_by && ` par ${service.archived_by}`}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 };
