@@ -284,11 +284,52 @@ async def update_service(service_id: str, service_update: ServiceCreate, admin_u
 
 @api_router.delete("/services/{service_id}")
 async def delete_service(service_id: str, admin_user: dict = Depends(require_admin)):
-    """Delete a service (admin only)"""
-    result = await db.services.delete_one({"id": service_id})
-    if result.deleted_count == 0:
+    """Archive a service (admin only) - soft delete"""
+    # Check if service has associated mails
+    mails_count = await db.mails.count_documents({"service_id": service_id})
+    
+    # Update service to archived status
+    result = await db.services.update_one(
+        {"id": service_id},
+        {"$set": {
+            "archived": True,
+            "archived_at": datetime.now(timezone.utc).isoformat(),
+            "archived_by": admin_user['name']
+        }}
+    )
+    
+    if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Service not found")
-    return {"message": "Service deleted"}
+    
+    # Archive all mails associated with this service
+    if mails_count > 0:
+        await db.mails.update_many(
+            {"service_id": service_id, "status": {"$ne": "archive"}},
+            {"$set": {"status": "archive"}}
+        )
+    
+    return {
+        "message": "Service archived", 
+        "archived_mails": mails_count,
+        "can_restore": True
+    }
+
+@api_router.post("/services/{service_id}/restore")
+async def restore_service(service_id: str, admin_user: dict = Depends(require_admin)):
+    """Restore an archived service (admin only)"""
+    result = await db.services.update_one(
+        {"id": service_id},
+        {"$set": {
+            "archived": False,
+            "archived_at": None,
+            "archived_by": None
+        }}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    return {"message": "Service restored"}
 
 # ===== CORRESPONDENTS ROUTES =====
 
