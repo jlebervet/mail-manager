@@ -243,13 +243,19 @@ async def register(user_create: UserCreate, admin_user: dict = Depends(require_a
 # ===== SERVICES ROUTES =====
 
 @api_router.get("/services", response_model=List[Service])
-async def get_services(current_user: dict = Depends(get_current_user)):
-    """Get all services"""
-    services = await db.services.find({}, {"_id": 0}).to_list(1000)
+async def get_services(
+    include_archived: bool = False,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all services (exclude archived by default)"""
+    query = {} if include_archived else {"archived": {"$ne": True}}
+    services = await db.services.find(query, {"_id": 0}).to_list(1000)
     
     for service in services:
         if isinstance(service.get('created_at'), str):
             service['created_at'] = datetime.fromisoformat(service['created_at'])
+        if isinstance(service.get('archived_at'), str):
+            service['archived_at'] = datetime.fromisoformat(service['archived_at'])
     
     return services
 
