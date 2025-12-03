@@ -135,6 +135,8 @@ class MailCreate(BaseModel):
     service_name: str
     sub_service_id: Optional[str] = None
     sub_service_name: Optional[str] = None
+    parent_mail_id: Optional[str] = None
+    parent_mail_reference: Optional[str] = None
 
 class MailUpdate(BaseModel):
     subject: Optional[str] = None
