@@ -16,12 +16,17 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
 
 const MailDetailPage = ({ user }) => {
-  const { id, type } = useParams();
+  const params = useParams();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [mail, setMail] = useState(null);
-  const [isNew, setIsNew] = useState(!id || id === "new");
+  
+  // Determine if this is a new mail or editing existing
+  // URL can be /mail/:id or /mail/new/:type
+  const isNew = params.id === "new" || !params.id;
+  const id = isNew ? null : params.id;
+  const type = isNew ? params.type : null;
   
   // Form state
   const [subject, setSubject] = useState("");
