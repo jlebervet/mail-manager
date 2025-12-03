@@ -12,6 +12,8 @@ import { Badge } from "../components/ui/badge";
 
 const ServicesPage = ({ user }) => {
   const [services, setServices] = useState([]);
+  const [archivedServices, setArchivedServices] = useState([]);
+  const [showArchived, setShowArchived] = useState(false);
   const [open, setOpen] = useState(false);
   const [editingService, setEditingService] = useState(null);
   const [serviceName, setServiceName] = useState("");
@@ -20,7 +22,10 @@ const ServicesPage = ({ user }) => {
 
   useEffect(() => {
     fetchServices();
-  }, []);
+    if (showArchived) {
+      fetchArchivedServices();
+    }
+  }, [showArchived]);
 
   const fetchServices = async () => {
     try {
