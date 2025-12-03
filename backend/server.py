@@ -121,6 +121,9 @@ class Mail(BaseModel):
     opened_by_id: Optional[str] = None
     opened_by_name: Optional[str] = None
     opened_at: Optional[datetime] = None
+    parent_mail_id: Optional[str] = None  # For replies
+    parent_mail_reference: Optional[str] = None
+    related_mails: List[dict] = []  # List of related mails (responses)
 
 class MailCreate(BaseModel):
     type: str
