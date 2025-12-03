@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Badge } from "../components/ui/badge";
 import { Separator } from "../components/ui/separator";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, X, Download, Save, Send } from "lucide-react";
+import { ArrowLeft, Upload, X, Download, Save, Send, Reply, ExternalLink } from "lucide-react";
 import { API } from "../App";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
