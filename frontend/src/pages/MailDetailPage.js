@@ -203,6 +203,26 @@ const MailDetailPage = ({ user }) => {
     link.click();
   };
 
+  const handleReply = () => {
+    // Store parent mail data in session storage for the reply form
+    const parentMailData = {
+      parent_mail_id: mail.id,
+      parent_mail_reference: mail.reference,
+      correspondent_id: mail.correspondent_id,
+      correspondent_name: mail.correspondent_name,
+      service_id: mail.service_id,
+      service_name: mail.service_name,
+      sub_service_id: mail.sub_service_id,
+      sub_service_name: mail.sub_service_name,
+      original_subject: mail.subject
+    };
+    sessionStorage.setItem('replyToMail', JSON.stringify(parentMailData));
+    
+    // Navigate to new outgoing mail
+    const replyType = mail.type === "entrant" ? "sortant" : "entrant";
+    navigate(`/mail/new/${replyType}`);
+  };
+
   const handleSave = async () => {
     if (!subject || !content || !selectedCorrespondent || !selectedService) {
       toast.error("Veuillez remplir tous les champs obligatoires");
@@ -218,6 +238,18 @@ const MailDetailPage = ({ user }) => {
         : null;
 
       if (isNew) {
+        // Check if this is a reply
+        const replyData = sessionStorage.getItem('replyToMail');
+        let parentMailId = null;
+        let parentMailReference = null;
+        
+        if (replyData) {
+          const parsed = JSON.parse(replyData);
+          parentMailId = parsed.parent_mail_id;
+          parentMailReference = parsed.parent_mail_reference;
+          sessionStorage.removeItem('replyToMail'); // Clean up
+        }
+        
         // Create new mail
         const mailData = {
           type: type || "entrant",
@@ -228,7 +260,9 @@ const MailDetailPage = ({ user }) => {
           service_id: selectedService,
           service_name: serviceData?.name || "",
           sub_service_id: selectedSubService,
-          sub_service_name: subServiceData?.name || null
+          sub_service_name: subServiceData?.name || null,
+          parent_mail_id: parentMailId,
+          parent_mail_reference: parentMailReference
         };
         
         const response = await axios.post(`${API}/mails`, mailData);
