@@ -460,6 +460,21 @@ async def create_mail(mail_create: MailCreate, current_user: dict = Depends(get_
         step['timestamp'] = step['timestamp'].isoformat()
     
     await db.mails.insert_one(doc)
+    
+    # If this is a reply to another mail, update the parent mail's related_mails
+    if mail_create.parent_mail_id:
+        await db.mails.update_one(
+            {"id": mail_create.parent_mail_id},
+            {"$push": {"related_mails": {
+                "id": mail.id,
+                "reference": mail.reference,
+                "type": mail.type,
+                "subject": mail.subject,
+                "created_at": doc['created_at'],
+                "status": mail.status
+            }}}
+        )
+    
     return mail
 
 @api_router.put("/mails/{mail_id}", response_model=Mail)
