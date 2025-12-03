@@ -50,6 +50,19 @@ const MailDetailPage = ({ user }) => {
     
     if (!isNew) {
       fetchMail();
+    } else {
+      // Check if this is a reply
+      const replyData = sessionStorage.getItem('replyToMail');
+      if (replyData) {
+        const parsed = JSON.parse(replyData);
+        setSubject(`Re: ${parsed.original_subject}`);
+        setSelectedCorrespondent({
+          id: parsed.correspondent_id,
+          name: parsed.correspondent_name
+        });
+        setSelectedService(parsed.service_id);
+        setSelectedSubService(parsed.sub_service_id);
+      }
     }
   }, [id]);
 
