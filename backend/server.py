@@ -62,6 +62,9 @@ class Service(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
     sub_services: List[SubService] = []
+    archived: bool = False
+    archived_at: Optional[datetime] = None
+    archived_by: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ServiceCreate(BaseModel):
