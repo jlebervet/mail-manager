@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Depends, Header
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -6,10 +6,11 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from typing import List, Optional
 import uuid
-from datetime import datetime, timezone
-
+from datetime import datetime, timezone, timedelta
+import jwt
+import base64
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -19,54 +20,551 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Create the main app without a prefix
-app = FastAPI()
+# JWT Secret for mocked Azure AD
+JWT_SECRET = "mocked_azure_ad_secret_key_2025"
+JWT_ALGORITHM = "HS256"
 
-# Create a router with the /api prefix
+# Create the main app
+app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
+# ===== MODELS =====
 
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
-    
+class User(BaseModel):
+    model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
+    email: str
+    name: str
+    password: str  # In production, this would be hashed
+    role: str = "user"  # "user" or "admin"
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class UserCreate(BaseModel):
+    email: str
+    name: str
+    password: str
+    role: str = "user"
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class LoginResponse(BaseModel):
+    token: str
+    user: dict
+
+class SubService(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+
+class Service(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    sub_services: List[SubService] = []
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class ServiceCreate(BaseModel):
+    name: str
+    sub_services: List[SubService] = []
+
+class Correspondent(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    email: Optional[str] = None
+    organization: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class CorrespondentCreate(BaseModel):
+    name: str
+    email: Optional[str] = None
+    organization: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+
+class Attachment(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    filename: str
+    content_type: str
+    size: int
+    data: str  # Base64 encoded
+
+class WorkflowStep(BaseModel):
+    status: str  # "recu", "traitement", "traite", "archive"
+    user_id: str
+    user_name: str
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    comment: Optional[str] = None
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
+class Mail(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    type: str  # "entrant" or "sortant"
+    reference: str  # Auto-generated reference number
+    subject: str
+    content: str
+    correspondent_id: str
+    correspondent_name: str
+    service_id: str
+    service_name: str
+    sub_service_id: Optional[str] = None
+    sub_service_name: Optional[str] = None
+    assigned_to_id: Optional[str] = None
+    assigned_to_name: Optional[str] = None
+    status: str = "recu"  # "recu", "traitement", "traite", "archive"
+    workflow: List[WorkflowStep] = []
+    attachments: List[Attachment] = []
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    opened_by_id: Optional[str] = None
+    opened_by_name: Optional[str] = None
+    opened_at: Optional[datetime] = None
 
-# Add your routes to the router instead of directly to app
-@api_router.get("/")
-async def root():
-    return {"message": "Hello World"}
+class MailCreate(BaseModel):
+    type: str
+    subject: str
+    content: str
+    correspondent_id: str
+    correspondent_name: str
+    service_id: str
+    service_name: str
+    sub_service_id: Optional[str] = None
+    sub_service_name: Optional[str] = None
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
+class MailUpdate(BaseModel):
+    subject: Optional[str] = None
+    content: Optional[str] = None
+    status: Optional[str] = None
+    assigned_to_id: Optional[str] = None
+    assigned_to_name: Optional[str] = None
+    comment: Optional[str] = None
+
+# ===== AUTH HELPERS =====
+
+def create_token(user_data: dict) -> str:
+    """Create a mocked Azure AD JWT token"""
+    payload = {
+        "sub": user_data["id"],
+        "email": user_data["email"],
+        "name": user_data["name"],
+        "role": user_data["role"],
+        "exp": datetime.now(timezone.utc) + timedelta(hours=24)
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+def verify_token(token: str) -> dict:
+    """Verify mocked Azure AD token"""
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+async def get_current_user(authorization: str = Header(None)) -> dict:
+    """Dependency to get current user from token"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="No authorization header")
     
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
-    
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
+    try:
+        scheme, token = authorization.split()
+        if scheme.lower() != "bearer":
+            raise HTTPException(status_code=401, detail="Invalid authentication scheme")
+        
+        user_data = verify_token(token)
+        return user_data
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Invalid authorization header")
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
-    
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    
-    return status_checks
+async def require_admin(current_user: dict = Depends(get_current_user)):
+    """Dependency to require admin role"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return current_user
 
-# Include the router in the main app
+# ===== AUTH ROUTES =====
+
+@api_router.post("/auth/login", response_model=LoginResponse)
+async def login(credentials: LoginRequest):
+    """Mocked Azure AD login"""
+    # Find user in database
+    user_doc = await db.users.find_one({"email": credentials.email}, {"_id": 0})
+    
+    if not user_doc:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Check password (in production, use proper hashing)
+    if user_doc["password"] != credentials.password:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Convert datetime strings back
+    if isinstance(user_doc.get('created_at'), str):
+        user_doc['created_at'] = datetime.fromisoformat(user_doc['created_at'])
+    
+    # Create token
+    token = create_token(user_doc)
+    
+    # Return token and user info (without password)
+    user_info = {k: v for k, v in user_doc.items() if k != "password"}
+    
+    return LoginResponse(token=token, user=user_info)
+
+@api_router.get("/auth/me")
+async def get_current_user_info(current_user: dict = Depends(get_current_user)):
+    """Get current user information"""
+    return current_user
+
+@api_router.post("/auth/register", response_model=User)
+async def register(user_create: UserCreate, admin_user: dict = Depends(require_admin)):
+    """Register a new user (admin only)"""
+    # Check if user already exists
+    existing = await db.users.find_one({"email": user_create.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="User already exists")
+    
+    user = User(**user_create.model_dump())
+    doc = user.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.users.insert_one(doc)
+    return user
+
+# ===== SERVICES ROUTES =====
+
+@api_router.get("/services", response_model=List[Service])
+async def get_services(current_user: dict = Depends(get_current_user)):
+    """Get all services"""
+    services = await db.services.find({}, {"_id": 0}).to_list(1000)
+    
+    for service in services:
+        if isinstance(service.get('created_at'), str):
+            service['created_at'] = datetime.fromisoformat(service['created_at'])
+    
+    return services
+
+@api_router.post("/services", response_model=Service)
+async def create_service(service_create: ServiceCreate, admin_user: dict = Depends(require_admin)):
+    """Create a new service (admin only)"""
+    service = Service(**service_create.model_dump())
+    doc = service.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.services.insert_one(doc)
+    return service
+
+@api_router.put("/services/{service_id}", response_model=Service)
+async def update_service(service_id: str, service_update: ServiceCreate, admin_user: dict = Depends(require_admin)):
+    """Update a service (admin only)"""
+    service = Service(id=service_id, **service_update.model_dump())
+    doc = service.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    result = await db.services.replace_one({"id": service_id}, doc)
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    return service
+
+@api_router.delete("/services/{service_id}")
+async def delete_service(service_id: str, admin_user: dict = Depends(require_admin)):
+    """Delete a service (admin only)"""
+    result = await db.services.delete_one({"id": service_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Service not found")
+    return {"message": "Service deleted"}
+
+# ===== CORRESPONDENTS ROUTES =====
+
+@api_router.get("/correspondents", response_model=List[Correspondent])
+async def get_correspondents(search: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+    """Get all correspondents with optional search"""
+    query = {}
+    if search:
+        # Search by name, email, or organization (case-insensitive)
+        query = {
+            "$or": [
+                {"name": {"$regex": search, "$options": "i"}},
+                {"email": {"$regex": search, "$options": "i"}},
+                {"organization": {"$regex": search, "$options": "i"}}
+            ]
+        }
+    
+    correspondents = await db.correspondents.find(query, {"_id": 0}).to_list(1000)
+    
+    for corr in correspondents:
+        if isinstance(corr.get('created_at'), str):
+            corr['created_at'] = datetime.fromisoformat(corr['created_at'])
+    
+    return correspondents
+
+@api_router.post("/correspondents", response_model=Correspondent)
+async def create_correspondent(correspondent_create: CorrespondentCreate, current_user: dict = Depends(get_current_user)):
+    """Create a new correspondent"""
+    correspondent = Correspondent(**correspondent_create.model_dump())
+    doc = correspondent.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.correspondents.insert_one(doc)
+    return correspondent
+
+@api_router.put("/correspondents/{correspondent_id}", response_model=Correspondent)
+async def update_correspondent(correspondent_id: str, correspondent_update: CorrespondentCreate, current_user: dict = Depends(get_current_user)):
+    """Update a correspondent"""
+    correspondent = Correspondent(id=correspondent_id, **correspondent_update.model_dump())
+    doc = correspondent.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    result = await db.correspondents.replace_one({"id": correspondent_id}, doc)
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Correspondent not found")
+    
+    return correspondent
+
+@api_router.delete("/correspondents/{correspondent_id}")
+async def delete_correspondent(correspondent_id: str, admin_user: dict = Depends(require_admin)):
+    """Delete a correspondent (admin only)"""
+    result = await db.correspondents.delete_one({"id": correspondent_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Correspondent not found")
+    return {"message": "Correspondent deleted"}
+
+# ===== MAILS ROUTES =====
+
+@api_router.get("/mails", response_model=List[Mail])
+async def get_mails(
+    type: Optional[str] = None,
+    status: Optional[str] = None,
+    service_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all mails with optional filters"""
+    query = {}
+    if type:
+        query["type"] = type
+    if status:
+        query["status"] = status
+    if service_id:
+        query["service_id"] = service_id
+    
+    mails = await db.mails.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    
+    for mail in mails:
+        if isinstance(mail.get('created_at'), str):
+            mail['created_at'] = datetime.fromisoformat(mail['created_at'])
+        if isinstance(mail.get('opened_at'), str):
+            mail['opened_at'] = datetime.fromisoformat(mail['opened_at'])
+        # Convert workflow timestamps
+        for step in mail.get('workflow', []):
+            if isinstance(step.get('timestamp'), str):
+                step['timestamp'] = datetime.fromisoformat(step['timestamp'])
+    
+    return mails
+
+@api_router.get("/mails/{mail_id}", response_model=Mail)
+async def get_mail(mail_id: str, current_user: dict = Depends(get_current_user)):
+    """Get a specific mail and mark as opened"""
+    mail_doc = await db.mails.find_one({"id": mail_id}, {"_id": 0})
+    
+    if not mail_doc:
+        raise HTTPException(status_code=404, detail="Mail not found")
+    
+    # Convert datetime strings
+    if isinstance(mail_doc.get('created_at'), str):
+        mail_doc['created_at'] = datetime.fromisoformat(mail_doc['created_at'])
+    if isinstance(mail_doc.get('opened_at'), str):
+        mail_doc['opened_at'] = datetime.fromisoformat(mail_doc['opened_at'])
+    for step in mail_doc.get('workflow', []):
+        if isinstance(step.get('timestamp'), str):
+            step['timestamp'] = datetime.fromisoformat(step['timestamp'])
+    
+    # Auto-assign to user who opens it first
+    if not mail_doc.get('opened_by_id'):
+        mail_doc['opened_by_id'] = current_user['sub']
+        mail_doc['opened_by_name'] = current_user['name']
+        mail_doc['opened_at'] = datetime.now(timezone.utc).isoformat()
+        mail_doc['assigned_to_id'] = current_user['sub']
+        mail_doc['assigned_to_name'] = current_user['name']
+        
+        # Update in database
+        await db.mails.update_one(
+            {"id": mail_id},
+            {"$set": {
+                "opened_by_id": mail_doc['opened_by_id'],
+                "opened_by_name": mail_doc['opened_by_name'],
+                "opened_at": mail_doc['opened_at'],
+                "assigned_to_id": mail_doc['assigned_to_id'],
+                "assigned_to_name": mail_doc['assigned_to_name']
+            }}
+        )
+    
+    return Mail(**mail_doc)
+
+@api_router.post("/mails", response_model=Mail)
+async def create_mail(mail_create: MailCreate, current_user: dict = Depends(get_current_user)):
+    """Create a new mail"""
+    # Generate reference number
+    count = await db.mails.count_documents({})
+    reference = f"MAIL-{datetime.now(timezone.utc).year}-{count + 1:05d}"
+    
+    mail = Mail(
+        **mail_create.model_dump(),
+        reference=reference,
+        workflow=[
+            WorkflowStep(
+                status="recu",
+                user_id=current_user['sub'],
+                user_name=current_user['name']
+            )
+        ]
+    )
+    
+    doc = mail.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    # Convert workflow timestamps
+    for step in doc['workflow']:
+        step['timestamp'] = step['timestamp'].isoformat()
+    
+    await db.mails.insert_one(doc)
+    return mail
+
+@api_router.put("/mails/{mail_id}", response_model=Mail)
+async def update_mail(mail_id: str, mail_update: MailUpdate, current_user: dict = Depends(get_current_user)):
+    """Update a mail"""
+    mail_doc = await db.mails.find_one({"id": mail_id}, {"_id": 0})
+    
+    if not mail_doc:
+        raise HTTPException(status_code=404, detail="Mail not found")
+    
+    # Convert datetime strings
+    if isinstance(mail_doc.get('created_at'), str):
+        mail_doc['created_at'] = datetime.fromisoformat(mail_doc['created_at'])
+    if isinstance(mail_doc.get('opened_at'), str):
+        mail_doc['opened_at'] = datetime.fromisoformat(mail_doc['opened_at'])
+    for step in mail_doc.get('workflow', []):
+        if isinstance(step.get('timestamp'), str):
+            step['timestamp'] = datetime.fromisoformat(step['timestamp'])
+    
+    # Update fields
+    update_data = mail_update.model_dump(exclude_unset=True)
+    
+    # If status changed, add workflow step
+    if "status" in update_data and update_data["status"] != mail_doc["status"]:
+        workflow_step = WorkflowStep(
+            status=update_data["status"],
+            user_id=current_user['sub'],
+            user_name=current_user['name'],
+            comment=update_data.get("comment")
+        )
+        mail_doc['workflow'].append(workflow_step.model_dump())
+        mail_doc['workflow'][-1]['timestamp'] = mail_doc['workflow'][-1]['timestamp'].isoformat()
+    
+    # Remove comment from update_data as it's only for workflow
+    update_data.pop("comment", None)
+    
+    # Update mail document
+    for key, value in update_data.items():
+        mail_doc[key] = value
+    
+    # Prepare for MongoDB
+    doc = mail_doc.copy()
+    if isinstance(doc['created_at'], datetime):
+        doc['created_at'] = doc['created_at'].isoformat()
+    if doc.get('opened_at') and isinstance(doc['opened_at'], datetime):
+        doc['opened_at'] = doc['opened_at'].isoformat()
+    
+    await db.mails.replace_one({"id": mail_id}, doc)
+    
+    return Mail(**mail_doc)
+
+@api_router.post("/mails/{mail_id}/attachments")
+async def add_attachment(mail_id: str, file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+    """Add attachment to a mail"""
+    # Read file content
+    content = await file.read()
+    
+    # Create attachment
+    attachment = Attachment(
+        filename=file.filename,
+        content_type=file.content_type or "application/octet-stream",
+        size=len(content),
+        data=base64.b64encode(content).decode('utf-8')
+    )
+    
+    # Add to mail
+    result = await db.mails.update_one(
+        {"id": mail_id},
+        {"$push": {"attachments": attachment.model_dump()}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Mail not found")
+    
+    return attachment
+
+@api_router.delete("/mails/{mail_id}")
+async def delete_mail(mail_id: str, admin_user: dict = Depends(require_admin)):
+    """Delete a mail (admin only)"""
+    result = await db.mails.delete_one({"id": mail_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Mail not found")
+    return {"message": "Mail deleted"}
+
+# ===== USERS ROUTES (Admin) =====
+
+@api_router.get("/users", response_model=List[User])
+async def get_users(admin_user: dict = Depends(require_admin)):
+    """Get all users (admin only)"""
+    users = await db.users.find({}, {"_id": 0}).to_list(1000)
+    
+    for user in users:
+        if isinstance(user.get('created_at'), str):
+            user['created_at'] = datetime.fromisoformat(user['created_at'])
+    
+    return users
+
+@api_router.put("/users/{user_id}")
+async def update_user_role(user_id: str, role: str, admin_user: dict = Depends(require_admin)):
+    """Update user role (admin only)"""
+    result = await db.users.update_one({"id": user_id}, {"$set": {"role": role}})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"message": "User role updated"}
+
+@api_router.delete("/users/{user_id}")
+async def delete_user(user_id: str, admin_user: dict = Depends(require_admin)):
+    """Delete a user (admin only)"""
+    result = await db.users.delete_one({"id": user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"message": "User deleted"}
+
+# ===== STATS ROUTES =====
+
+@api_router.get("/stats")
+async def get_stats(current_user: dict = Depends(get_current_user)):
+    """Get dashboard statistics"""
+    total_mails = await db.mails.count_documents({})
+    entrant_mails = await db.mails.count_documents({"type": "entrant"})
+    sortant_mails = await db.mails.count_documents({"type": "sortant"})
+    
+    status_counts = {}
+    for status in ["recu", "traitement", "traite", "archive"]:
+        status_counts[status] = await db.mails.count_documents({"status": status})
+    
+    assigned_to_me = await db.mails.count_documents({"assigned_to_id": current_user['sub']})
+    
+    return {
+        "total_mails": total_mails,
+        "entrant_mails": entrant_mails,
+        "sortant_mails": sortant_mails,
+        "status_counts": status_counts,
+        "assigned_to_me": assigned_to_me
+    }
+
+# Include router
 app.include_router(api_router)
 
 app.add_middleware(
@@ -77,7 +575,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
