@@ -405,6 +405,33 @@ async def get_mail(mail_id: str, current_user: dict = Depends(get_current_user))
             }}
         )
     
+    # Get related mails (responses and parent)
+    related_mails = []
+    
+    # Get child mails (responses to this mail)
+    child_mails = await db.mails.find(
+        {"parent_mail_id": mail_id}, 
+        {"_id": 0, "id": 1, "reference": 1, "type": 1, "subject": 1, "created_at": 1, "status": 1}
+    ).to_list(100)
+    
+    for child in child_mails:
+        if isinstance(child.get('created_at'), str):
+            child['created_at'] = datetime.fromisoformat(child['created_at'])
+        related_mails.append(child)
+    
+    # Get parent mail if this is a response
+    if mail_doc.get('parent_mail_id'):
+        parent_mail = await db.mails.find_one(
+            {"id": mail_doc['parent_mail_id']},
+            {"_id": 0, "id": 1, "reference": 1, "type": 1, "subject": 1, "created_at": 1, "status": 1}
+        )
+        if parent_mail:
+            if isinstance(parent_mail.get('created_at'), str):
+                parent_mail['created_at'] = datetime.fromisoformat(parent_mail['created_at'])
+            related_mails.insert(0, parent_mail)
+    
+    mail_doc['related_mails'] = related_mails
+    
     return Mail(**mail_doc)
 
 @api_router.post("/mails", response_model=Mail)
