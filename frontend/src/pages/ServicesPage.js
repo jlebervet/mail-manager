@@ -315,7 +315,7 @@ const ServicesPage = ({ user }) => {
                         data-testid={`delete-service-${service.id}`}
                         size="sm"
                         variant="ghost"
-                        onClick={() => handleDelete(service.id)}
+                        onClick={() => openArchiveDialog(service.id)}
                       >
                         <Archive className="h-4 w-4 text-amber-600" />
                       </Button>
