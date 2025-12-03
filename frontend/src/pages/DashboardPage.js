@@ -87,8 +87,21 @@ const DashboardPage = ({ user }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
+          const getNavigationPath = () => {
+            if (index === 0) return "/mails/entrant";
+            if (index === 1) return "/mails/sortant";
+            if (index === 2) return "/mails/entrant"; // En traitement
+            if (index === 3) return "/mails/entrant"; // Archives
+            return "/";
+          };
+          
           return (
-            <Card key={index} className="card-hover border-0 shadow-sm" data-testid={`stat-card-${index}`}>
+            <Card 
+              key={index} 
+              className="card-hover border-0 shadow-sm cursor-pointer" 
+              data-testid={`stat-card-${index}`}
+              onClick={() => navigate(getNavigationPath())}
+            >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
