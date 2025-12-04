@@ -84,8 +84,8 @@ docker-compose ps
 Vous devriez voir :
 ```
 NAME                      STATUS              PORTS
-mail-manager-backend      Up 30 seconds       0.0.0.0:8001->8001/tcp
-mail-manager-frontend     Up 30 seconds       0.0.0.0:3000->80/tcp
+mail-manager-backend      Up 30 seconds       0.0.0.0:8888->8888/tcp
+mail-manager-frontend     Up 30 seconds       0.0.0.0:3333->80/tcp
 mail-manager-mongodb      Up 30 seconds       0.0.0.0:27017->27017/tcp
 ```
 
@@ -101,9 +101,9 @@ docker-compose exec backend python scripts/set_first_admin.py
 
 ### Étape 5 : Accéder à l'Application
 
-- **Frontend** : http://localhost:3000
-- **Backend API** : http://localhost:8001
-- **API Docs** : http://localhost:8001/docs
+- **Frontend** : http://localhost:3333
+- **Backend API** : http://localhost:8888
+- **API Docs** : http://localhost:8888/docs
 
 ---
 
@@ -126,7 +126,7 @@ cp .env.example .env
 nano .env
 
 # Démarrer le serveur
-uvicorn server:app --host 0.0.0.0 --port 8001
+uvicorn server:app --host 0.0.0.0 --port 8888
 ```
 
 ### Frontend
@@ -179,7 +179,7 @@ sudo systemctl start mongod
 **Authentication :**
 - Ajoutez les URIs de redirection :
   - `https://votre-domaine.com` (production)
-  - `http://localhost:3000` (développement)
+  - `http://localhost:3333` (développement)
 - Cochez : **Access tokens** et **ID tokens**
 
 **Expose an API :**
@@ -210,7 +210,7 @@ sudo systemctl start mongod
 |----------|-------------|---------|
 | `MONGO_URL` | URL de connexion MongoDB | `mongodb://admin:pass@localhost:27017` |
 | `DB_NAME` | Nom de la base de données | `mail_management_db` |
-| `CORS_ORIGINS` | Origines autorisées (CORS) | `https://votre-domaine.com,http://localhost:3000` |
+| `CORS_ORIGINS` | Origines autorisées (CORS) | `https://votre-domaine.com,http://localhost:3333` |
 | `AZURE_TENANT_ID` | ID du tenant Azure AD | `dd1d7dff-fcc8-45f7-...` |
 | `AZURE_CLIENT_ID` | ID de l'application Azure AD | `3636e564-b7a6-405a-...` |
 | `AZURE_SCOPE` | Scope API Azure AD | `api://3636e564.../user_impersonation` |
@@ -400,14 +400,14 @@ CORS_ORIGINS=https://votre-domaine.com,https://www.votre-domaine.com
                              ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    Frontend (React + Nginx)                  │
-│                      Port 3000 (ou 80)                       │
+│                      Port 3333 (ou 80)                       │
 └────────────────────────────┬────────────────────────────────┘
                              │
                              │ HTTP/HTTPS + Bearer Token
                              ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    Backend (FastAPI)                         │
-│                         Port 8001                            │
+│                         Port 8888                            │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │ Azure AD Token Validation                            │   │
 │  │ User Sync & Role Management                          │   │
@@ -491,7 +491,7 @@ Un fichier `kubernetes.yml` peut être créé si nécessaire pour déploiement s
 **Redirect URIs (Authentication > Platform configurations > SPA) :**
 ```
 https://votre-domaine.com
-http://localhost:3000
+http://localhost:3333
 ```
 
 **Scopes (Expose an API) :**
@@ -689,7 +689,7 @@ mail-manager/
 # Backend
 cd backend
 source venv/bin/activate
-uvicorn server:app --reload --port 8001
+uvicorn server:app --reload --port 8888
 
 # Frontend (nouveau terminal)
 cd frontend

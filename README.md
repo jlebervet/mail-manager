@@ -74,9 +74,9 @@ docker-compose exec backend python scripts/set_first_admin.py
 **C'est tout ! 🎉**
 
 Accédez à :
-- **Frontend** : http://localhost:3000
-- **API** : http://localhost:8001
-- **API Docs** : http://localhost:8001/docs
+- **Frontend** : http://localhost:3333
+- **API** : http://localhost:8888
+- **API Docs** : http://localhost:8888/docs
 
 ---
 

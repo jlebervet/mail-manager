@@ -17,7 +17,7 @@ up: ## Démarrer l'application
 	@echo "🚀 Démarrage de l'application..."
 	@docker-compose up -d
 	@echo "✅ Application démarrée!"
-	@echo "Frontend: http://localhost:3000"
+	@echo "Frontend: http://localhost:3333"
 	@echo "Backend:  http://localhost:8001"
 	@echo "API Docs: http://localhost:8001/docs"
 
@@ -104,7 +104,7 @@ install: setup build up init-db ## Installation complète (setup + build + up + 
 	@echo "Prochaines étapes:"
 	@echo "1. Connectez-vous avec Microsoft"
 	@echo "2. Exécutez: make set-admin"
-	@echo "3. Accédez à l'application: http://localhost:3000"
+	@echo "3. Accédez à l'application: http://localhost:3333"
 	@echo ""
 
 prod: ## Lancer en mode production
@@ -118,5 +118,5 @@ dev: ## Lancer en mode développement
 health: ## Vérifier la santé de l'application
 	@echo "🏥 Vérification de la santé..."
 	@echo "Backend:  $$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8001/api/stats)"
-	@echo "Frontend: $$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/)"
+	@echo "Frontend: $$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3333/)"
 	@echo "MongoDB:  $$(docker-compose exec mongodb mongosh --quiet --eval 'db.runCommand({ping:1}).ok' 2>/dev/null || echo '❌')"

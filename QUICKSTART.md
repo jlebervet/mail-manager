@@ -12,7 +12,7 @@ cd mail-manager
 make install
 ```
 
-**C'est tout ! L'application tourne sur http://localhost:3000** 🎉
+**C'est tout ! L'application tourne sur http://localhost:3333** 🎉
 
 ### Option 2 : Commandes Manuelles
 
@@ -39,7 +39,7 @@ docker-compose exec backend python scripts/init_data.py
 
 1. **App registrations** > **New registration**
 2. Name: `Mail Manager`
-3. Redirect URI (SPA): `http://localhost:3000`
+3. Redirect URI (SPA): `http://localhost:3333`
 4. **Expose an API** > Add scope: `user_impersonation`
 5. **Manifest** > `"accessTokenAcceptedVersion": 2`
 
