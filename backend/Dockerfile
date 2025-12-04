@@ -21,11 +21,11 @@ COPY . .
 RUN mkdir -p scripts
 
 # Expose port
-EXPOSE 8001
+EXPOSE 8888
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD python -c "import requests; requests.get('http://localhost:8001/api/stats', timeout=5)"
+  CMD python -c "import requests; requests.get('http://localhost:8888/api/stats', timeout=5)"
 
 # Run the application
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8001"]
+CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8888"]
