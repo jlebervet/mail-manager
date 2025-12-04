@@ -82,7 +82,7 @@ const MailDetailPage = ({ user }) => {
   const fetchMail = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API}/mails/${id}`);
+      const response = await axios.get(`${API}/messages/${id}`);
       const mailData = response.data;
       setMail(mailData);
       setSubject(mailData.subject);
@@ -196,7 +196,7 @@ const MailDetailPage = ({ user }) => {
         const formData = new FormData();
         formData.append('file', file);
         
-        const response = await axios.post(`${API}/mails/${id}/attachments`, formData, {
+        const response = await axios.post(`${API}/messages/${id}/attachments`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         
@@ -243,7 +243,7 @@ const MailDetailPage = ({ user }) => {
     sessionStorage.setItem('replyToMail', JSON.stringify(parentMailData));
     
     const replyType = mail.type === "entrant" ? "sortant" : "entrant";
-    navigate(`/mail/new/${replyType}`);
+    navigate(`/message/new/${replyType}`);
   };
 
   const handleSave = async () => {
@@ -302,11 +302,11 @@ const MailDetailPage = ({ user }) => {
           const file = new File([blob], attachment.filename, { type: attachment.content_type });
           const formData = new FormData();
           formData.append('file', file);
-          await axios.post(`${API}/mails/${newMailId}/attachments`, formData);
+          await axios.post(`${API}/messages/${newMailId}/attachments`, formData);
         }
         
         toast.success("Message créé avec succès");
-        navigate(`/mail/${newMailId}`);
+        navigate(`/message/${newMailId}`);
       } else {
         const updateData = {
           subject,
@@ -317,7 +317,7 @@ const MailDetailPage = ({ user }) => {
           comment: comment || null
         };
         
-        await axios.put(`${API}/mails/${id}`, updateData);
+        await axios.put(`${API}/messages/${id}`, updateData);
         toast.success("Message mis à jour");
         fetchMail();
         setComment("");
@@ -735,7 +735,7 @@ const MailDetailPage = ({ user }) => {
                           key={relatedMail.id}
                           data-testid={`related-mail-${relatedMail.id}`}
                           className="p-3 bg-slate-50 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors"
-                          onClick={() => navigate(`/mail/${relatedMail.id}`)}
+                          onClick={() => navigate(`/message/${relatedMail.id}`)}
                         >
                           <div className="flex items-start justify-between mb-2">
                             <Badge variant={relatedMail.type === "entrant" ? "default" : "secondary"} className="text-xs">

@@ -88,10 +88,10 @@ const DashboardPage = ({ user }) => {
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           const getNavigationPath = () => {
-            if (index === 0) return "/mails/entrant";
-            if (index === 1) return "/mails/sortant";
-            if (index === 2) return "/mails/entrant"; // En traitement
-            if (index === 3) return "/mails/entrant"; // Archives
+            if (index === 0) return "/messages/entrant";
+            if (index === 1) return "/messages/sortant";
+            if (index === 2) return "/messages/entrant"; // En traitement
+            if (index === 3) return "/messages/entrant"; // Archives
             return "/";
           };
           
@@ -144,7 +144,7 @@ const DashboardPage = ({ user }) => {
                   key={mail.id}
                   data-testid={`recent-mail-${mail.id}`}
                   className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 cursor-pointer"
-                  onClick={() => navigate(`/mail/${mail.id}`)}
+                  onClick={() => navigate(`/message/${mail.id}`)}
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -169,16 +169,16 @@ const DashboardPage = ({ user }) => {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Button
-          data-testid="quick-new-entrant"
-          onClick={() => navigate("/mail/new/entrant")}
+          data-testid="create-message-entrant"
+          onClick={() => navigate("/message/new/entrant")}
           className="h-24 text-lg bg-blue-600 hover:bg-blue-700"
         >
           <Mail className="mr-2 h-5 w-5" />
           Nouveau message entrant
         </Button>
         <Button
-          data-testid="quick-new-sortant"
-          onClick={() => navigate("/mail/new/sortant")}
+          data-testid="create-message-sortant"
+          onClick={() => navigate("/message/new/sortant")}
           variant="outline"
           className="h-24 text-lg border-blue-600 text-blue-600 hover:bg-blue-50"
         >

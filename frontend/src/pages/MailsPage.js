@@ -92,7 +92,7 @@ const MailsPage = ({ user }) => {
         </div>
         <Button
           data-testid="create-mail-button"
-          onClick={() => navigate(`/mail/new/${type}`)}
+          onClick={() => navigate(`/message/new/${type}`)}
           className="bg-blue-600 hover:bg-blue-700"
         >
           <Plus className="mr-2 h-4 w-4" />
@@ -163,7 +163,7 @@ const MailsPage = ({ user }) => {
               key={mail.id}
               data-testid={`mail-card-${mail.id}`}
               className="border-0 shadow-sm card-hover cursor-pointer"
-              onClick={() => navigate(`/mail/${mail.id}`)}
+              onClick={() => navigate(`/message/${mail.id}`)}
             >
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
