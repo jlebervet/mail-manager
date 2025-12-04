@@ -407,7 +407,7 @@ const MailDetailPage = ({ user }) => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="message">📧 Message</SelectItem>
-                        <SelectItem value="email">📨 Email</SelectItem>
+                        <SelectItem value="email">💌 Email</SelectItem>
                         <SelectItem value="depot_main_propre">🤝 Dépôt main propre</SelectItem>
                         <SelectItem value="colis">📦 Colis</SelectItem>
                       </SelectContent>
