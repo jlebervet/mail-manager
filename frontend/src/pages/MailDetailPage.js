@@ -224,7 +224,7 @@ const MailDetailPage = ({ user }) => {
   const startBarcodeScanning = () => {
     if (barcodeInputRef.current) {
       barcodeInputRef.current.focus();
-      setScanningBarcode(true);
+      setShowBarcodeScanner(true);
       toast.info("Scannez le code-barres ou tapez le numéro");
     }
   };
