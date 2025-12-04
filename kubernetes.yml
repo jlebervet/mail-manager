@@ -15,7 +15,7 @@ metadata:
   namespace: mail-manager
 data:
   DB_NAME: "mail_management_db"
-  BACKEND_PORT: "8001"
+  BACKEND_PORT: "8888"
   FRONTEND_PORT: "80"
 
 ---
@@ -116,7 +116,7 @@ spec:
       - name: backend
         image: your-registry/mail-manager-backend:latest
         ports:
-        - containerPort: 8001
+        - containerPort: 8888
         env:
         - name: MONGO_URL
           valueFrom:
@@ -148,13 +148,13 @@ spec:
         livenessProbe:
           httpGet:
             path: /api/stats
-            port: 8001
+            port: 8888
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /api/stats
-            port: 8001
+            port: 8888
           initialDelaySeconds: 5
           periodSeconds: 5
 
@@ -169,8 +169,8 @@ spec:
   selector:
     app: backend
   ports:
-  - port: 8001
-    targetPort: 8001
+  - port: 8888
+    targetPort: 8888
 
 ---
 # Frontend Deployment
@@ -258,4 +258,4 @@ spec:
           service:
             name: backend
             port:
-              number: 8001
+              number: 8888
