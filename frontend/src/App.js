@@ -98,6 +98,7 @@ function App() {
             <Route path="services" element={<ServicesPage user={user} />} />
             <Route path="correspondents" element={<CorrespondentsPage user={user} />} />
             <Route path="users" element={<UsersPage user={user} />} />
+            <Route path="import" element={<ImportPage user={user} />} />
           </Route>
         </Routes>
       </BrowserRouter>
