@@ -144,6 +144,9 @@ class MailCreate(BaseModel):
     sub_service_name: Optional[str] = None
     parent_mail_id: Optional[str] = None
     parent_mail_reference: Optional[str] = None
+    message_type: str = "courrier"
+    is_registered: bool = False
+    registered_number: Optional[str] = None
 
 class MailUpdate(BaseModel):
     subject: Optional[str] = None
