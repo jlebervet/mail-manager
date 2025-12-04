@@ -9,8 +9,9 @@ import { Textarea } from "../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Badge } from "../components/ui/badge";
 import { Separator } from "../components/ui/separator";
+import { Checkbox } from "../components/ui/checkbox";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, X, Download, Save, Send, Reply, ExternalLink } from "lucide-react";
+import { ArrowLeft, Upload, X, Download, Save, Send, Reply, ExternalLink, ScanBarcode, Package } from "lucide-react";
 import { API } from "../App";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
@@ -19,11 +20,10 @@ const MailDetailPage = ({ user }) => {
   const params = useParams();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  const barcodeInputRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [mail, setMail] = useState(null);
   
-  // Determine if this is a new mail or editing existing
-  // URL can be /mail/:id or /mail/new/:type
   const isNew = params.id === "new" || !params.id;
   const id = isNew ? null : params.id;
   const type = isNew ? params.type : null;
@@ -38,13 +38,16 @@ const MailDetailPage = ({ user }) => {
   const [comment, setComment] = useState("");
   const [assignedTo, setAssignedTo] = useState(null);
   
-  // Data lists
+  // New fields
+  const [messageType, setMessageType] = useState("courrier");
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [registeredNumber, setRegisteredNumber] = useState("");
+  const [scanningBarcode, setScanningBarcode] = useState(false);
+  
   const [correspondents, setCorrespondents] = useState([]);
   const [services, setServices] = useState([]);
   const [users, setUsers] = useState([]);
   const [attachments, setAttachments] = useState([]);
-  
-  // Autocomplete
   const [correspondentSearch, setCorrespondentSearch] = useState("");
   const [openCorrespondent, setOpenCorrespondent] = useState(false);
 
@@ -56,7 +59,6 @@ const MailDetailPage = ({ user }) => {
     if (!isNew) {
       fetchMail();
     } else {
-      // Check if this is a reply
       const replyData = sessionStorage.getItem('replyToMail');
       if (replyData) {
         const parsed = JSON.parse(replyData);
@@ -87,24 +89,24 @@ const MailDetailPage = ({ user }) => {
       setContent(mailData.content);
       setStatus(mailData.status);
       setAttachments(mailData.attachments || []);
+      setMessageType(mailData.message_type || "courrier");
+      setIsRegistered(mailData.is_registered || false);
+      setRegisteredNumber(mailData.registered_number || "");
       
-      // Set correspondent
       setSelectedCorrespondent({
         id: mailData.correspondent_id,
         name: mailData.correspondent_name
       });
       
-      // Set service
       setSelectedService(mailData.service_id);
       setSelectedSubService(mailData.sub_service_id);
       
-      // Set assigned to
       if (mailData.assigned_to_id) {
         setAssignedTo(mailData.assigned_to_id);
       }
     } catch (error) {
       console.error("Error fetching mail:", error);
-      toast.error("Erreur lors du chargement du courrier");
+      toast.error("Erreur lors du chargement du message");
     } finally {
       setLoading(false);
     }
@@ -145,7 +147,6 @@ const MailDetailPage = ({ user }) => {
       setUsers(response.data);
     } catch (error) {
       console.error("Error fetching users:", error);
-      // Not critical, continue
     }
   };
 
@@ -177,7 +178,6 @@ const MailDetailPage = ({ user }) => {
 
   const uploadFile = async (file) => {
     if (isNew) {
-      // For new mails, store files locally until mail is created
       const reader = new FileReader();
       reader.onload = (e) => {
         const base64Data = e.target.result.split(',')[1];
@@ -192,7 +192,6 @@ const MailDetailPage = ({ user }) => {
       };
       reader.readAsDataURL(file);
     } else {
-      // For existing mails, upload to server
       try {
         const formData = new FormData();
         formData.append('file', file);
@@ -221,8 +220,15 @@ const MailDetailPage = ({ user }) => {
     link.click();
   };
 
+  const startBarcodeScanning = () => {
+    if (barcodeInputRef.current) {
+      barcodeInputRef.current.focus();
+      setScanningBarcode(true);
+      toast.info("Scannez le code-barres ou tapez le numéro");
+    }
+  };
+
   const handleReply = () => {
-    // Store parent mail data in session storage for the reply form
     const parentMailData = {
       parent_mail_id: mail.id,
       parent_mail_reference: mail.reference,
@@ -236,7 +242,6 @@ const MailDetailPage = ({ user }) => {
     };
     sessionStorage.setItem('replyToMail', JSON.stringify(parentMailData));
     
-    // Navigate to new outgoing mail
     const replyType = mail.type === "entrant" ? "sortant" : "entrant";
     navigate(`/mail/new/${replyType}`);
   };
@@ -244,6 +249,11 @@ const MailDetailPage = ({ user }) => {
   const handleSave = async () => {
     if (!subject || !content || !selectedCorrespondent || !selectedService) {
       toast.error("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
+
+    if (isRegistered && !registeredNumber) {
+      toast.error("Veuillez saisir le numéro de recommandé");
       return;
     }
 
@@ -256,7 +266,6 @@ const MailDetailPage = ({ user }) => {
         : null;
 
       if (isNew) {
-        // Check if this is a reply
         const replyData = sessionStorage.getItem('replyToMail');
         let parentMailId = null;
         let parentMailReference = null;
@@ -265,10 +274,9 @@ const MailDetailPage = ({ user }) => {
           const parsed = JSON.parse(replyData);
           parentMailId = parsed.parent_mail_id;
           parentMailReference = parsed.parent_mail_reference;
-          sessionStorage.removeItem('replyToMail'); // Clean up
+          sessionStorage.removeItem('replyToMail');
         }
         
-        // Create new mail
         const mailData = {
           type: type || "entrant",
           subject,
@@ -280,13 +288,15 @@ const MailDetailPage = ({ user }) => {
           sub_service_id: selectedSubService,
           sub_service_name: subServiceData?.name || null,
           parent_mail_id: parentMailId,
-          parent_mail_reference: parentMailReference
+          parent_mail_reference: parentMailReference,
+          message_type: messageType,
+          is_registered: isRegistered,
+          registered_number: isRegistered ? registeredNumber : null
         };
         
         const response = await axios.post(`${API}/mails`, mailData);
         const newMailId = response.data.id;
         
-        // Upload attachments if any
         for (const attachment of attachments) {
           const blob = await fetch(`data:${attachment.content_type};base64,${attachment.data}`).then(r => r.blob());
           const file = new File([blob], attachment.filename, { type: attachment.content_type });
@@ -295,10 +305,9 @@ const MailDetailPage = ({ user }) => {
           await axios.post(`${API}/mails/${newMailId}/attachments`, formData);
         }
         
-        toast.success("Courrier créé avec succès");
+        toast.success("Message créé avec succès");
         navigate(`/mail/${newMailId}`);
       } else {
-        // Update existing mail
         const updateData = {
           subject,
           content,
@@ -309,7 +318,7 @@ const MailDetailPage = ({ user }) => {
         };
         
         await axios.put(`${API}/mails/${id}`, updateData);
-        toast.success("Courrier mis à jour");
+        toast.success("Message mis à jour");
         fetchMail();
         setComment("");
       }
@@ -336,6 +345,13 @@ const MailDetailPage = ({ user }) => {
     }).format(date);
   };
 
+  const messageTypeLabels = {
+    courrier: "Courrier",
+    email: "Email",
+    depot_main_propre: "Dépôt main propre",
+    colis: "Colis"
+  };
+
   return (
     <div className="space-y-6 fade-in">
       <div className="flex items-center justify-between">
@@ -356,7 +372,7 @@ const MailDetailPage = ({ user }) => {
               className="border-blue-600 text-blue-600 hover:bg-blue-50"
             >
               <Reply className="mr-2 h-4 w-4" />
-              Répondre (Courrier sortant)
+              Répondre (Message sortant)
             </Button>
           )}
           <Button
@@ -372,15 +388,84 @@ const MailDetailPage = ({ user }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
           <Card className="border-0 shadow-sm">
             <CardHeader>
               <CardTitle>
-                {isNew ? `Nouveau courrier ${type}` : mail?.reference}
+                {isNew ? `Nouveau message ${type}` : mail?.reference}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {isNew && (
+                <>
+                  <div>
+                    <Label>Type de message *</Label>
+                    <Select value={messageType} onValueChange={setMessageType}>
+                      <SelectTrigger data-testid="message-type-select">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="courrier">📧 Courrier</SelectItem>
+                        <SelectItem value="email">✉️ Email</SelectItem>
+                        <SelectItem value="depot_main_propre">🤝 Dépôt main propre</SelectItem>
+                        <SelectItem value="colis">📦 Colis</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {(messageType === "courrier" || messageType === "colis") && (
+                    <div className="space-y-4 p-4 bg-slate-50 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="is-registered"
+                          data-testid="is-registered-checkbox"
+                          checked={isRegistered}
+                          onCheckedChange={setIsRegistered}
+                        />
+                        <Label htmlFor="is-registered" className="cursor-pointer">
+                          Recommandé avec accusé de réception
+                        </Label>
+                      </div>
+
+                      {isRegistered && (
+                        <div className="space-y-2">
+                          <Label htmlFor="registered-number">
+                            Numéro de recommandé / Code-barres *
+                          </Label>
+                          <div className="flex gap-2">
+                            <Input
+                              id="registered-number"
+                              ref={barcodeInputRef}
+                              data-testid="registered-number-input"
+                              value={registeredNumber}
+                              onChange={(e) => {
+                                setRegisteredNumber(e.target.value);
+                                if (scanningBarcode && e.target.value) {
+                                  setScanningBarcode(false);
+                                }
+                              }}
+                              placeholder="Ex: 1A123456789FR"
+                              className={scanningBarcode ? "border-blue-500 ring-2 ring-blue-200" : ""}
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={startBarcodeScanning}
+                              data-testid="scan-barcode-button"
+                            >
+                              <ScanBarcode className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <p className="text-xs text-slate-500">
+                            Cliquez sur l'icône de scan ou tapez directement le numéro
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+
               <div>
                 <Label htmlFor="subject">Objet *</Label>
                 <Input
@@ -388,7 +473,7 @@ const MailDetailPage = ({ user }) => {
                   data-testid="subject-input"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  placeholder="Objet du courrier"
+                  placeholder="Objet du message"
                   disabled={!isNew && user?.role !== "admin"}
                 />
               </div>
@@ -400,7 +485,7 @@ const MailDetailPage = ({ user }) => {
                   data-testid="content-textarea"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder="Contenu du courrier"
+                  placeholder="Contenu du message"
                   rows={8}
                   disabled={!isNew && user?.role !== "admin"}
                 />
@@ -494,7 +579,6 @@ const MailDetailPage = ({ user }) => {
             </CardContent>
           </Card>
 
-          {/* Attachments */}
           <Card className="border-0 shadow-sm">
             <CardHeader>
               <CardTitle>Pièces jointes</CardTitle>
@@ -560,11 +644,9 @@ const MailDetailPage = ({ user }) => {
           </Card>
         </div>
 
-        {/* Sidebar */}
         <div className="space-y-6">
           {!isNew && (
             <>
-              {/* Status & Assignment */}
               <Card className="border-0 shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-lg">Gestion</CardTitle>
@@ -614,7 +696,6 @@ const MailDetailPage = ({ user }) => {
                 </CardContent>
               </Card>
 
-              {/* Workflow */}
               <Card className="border-0 shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-lg">Historique</CardTitle>
@@ -642,7 +723,6 @@ const MailDetailPage = ({ user }) => {
                 </CardContent>
               </Card>
 
-              {/* Related Mails */}
               {mail?.related_mails && mail.related_mails.length > 0 && (
                 <Card className="border-0 shadow-sm">
                   <CardHeader>
@@ -673,12 +753,34 @@ const MailDetailPage = ({ user }) => {
                 </Card>
               )}
 
-              {/* Info */}
               <Card className="border-0 shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-lg">Informations</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
+                  {mail?.message_type && (
+                    <>
+                      <div>
+                        <span className="text-slate-600">Type:</span>
+                        <p className="font-medium">{messageTypeLabels[mail.message_type]}</p>
+                      </div>
+                      {mail.is_registered && (
+                        <>
+                          <Separator />
+                          <div>
+                            <span className="text-slate-600">Recommandé:</span>
+                            <p className="font-medium text-amber-600">Oui</p>
+                            {mail.registered_number && (
+                              <p className="text-xs font-mono mt-1 bg-slate-100 px-2 py-1 rounded">
+                                {mail.registered_number}
+                              </p>
+                            )}
+                          </div>
+                        </>
+                      )}
+                      <Separator />
+                    </>
+                  )}
                   <div>
                     <span className="text-slate-600">Créé le:</span>
                     <p className="font-medium">{formatDate(mail?.created_at)}</p>
