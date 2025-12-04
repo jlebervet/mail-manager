@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Depends, Header
+from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Depends, Header, Security
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -11,6 +11,8 @@ import uuid
 from datetime import datetime, timezone, timedelta
 import jwt
 import base64
+from fastapi_azure_auth import SingleTenantAzureAuthorizationCodeBearer
+from azure_config import settings
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -20,13 +22,25 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# JWT Secret for mocked Azure AD
-JWT_SECRET = "mocked_azure_ad_secret_key_2025"
-JWT_ALGORITHM = "HS256"
-
 # Create the main app
-app = FastAPI()
+app = FastAPI(
+    swagger_ui_oauth2_redirect_url="/oauth2-redirect",
+    swagger_ui_init_oauth={
+        "usePkceWithAuthorizationCodeGrant": True,
+        "clientId": settings.AZURE_CLIENT_ID,
+    },
+)
 api_router = APIRouter(prefix="/api")
+
+# Azure AD Authentication Configuration
+azure_scheme = SingleTenantAzureAuthorizationCodeBearer(
+    app_client_id=settings.AZURE_CLIENT_ID,
+    tenant_id=settings.AZURE_TENANT_ID,
+    scopes={
+        settings.AZURE_SCOPE: settings.SCOPE_DESCRIPTION,
+    },
+    allow_guest_users=False,
+)
 
 # ===== MODELS =====
 
