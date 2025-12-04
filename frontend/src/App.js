@@ -92,9 +92,9 @@ function App() {
             }
           >
             <Route index element={<DashboardPage user={user} />} />
-            <Route path="messages/:type" element={<MailsPage user={user} />} />
-            <Route path="message/new/:type" element={<MailDetailPage user={user} />} />
-            <Route path="message/:id" element={<MailDetailPage user={user} />} />
+            <Route path="messages/:type" element={<MessagesPage user={user} />} />
+            <Route path="message/new/:type" element={<MessageDetailPage user={user} />} />
+            <Route path="message/:id" element={<MessageDetailPage user={user} />} />
             <Route path="services" element={<ServicesPage user={user} />} />
             <Route path="correspondents" element={<CorrespondentsPage user={user} />} />
             <Route path="users" element={<UsersPage user={user} />} />
