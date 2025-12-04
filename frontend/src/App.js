@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import axios from "axios";
 import { PublicClientApplication, EventType } from "@azure/msal-browser";
-import { MsalProvider, AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from "@azure/msal-react";
-import { msalConfig, loginRequest, apiConfig } from "./authConfig";
+import { MsalProvider, useMsal, useIsAuthenticated } from "@azure/msal-react";
+import { msalConfig, loginRequest } from "./authConfig";
 import LoginPage from "./pages/LoginPage";
 import DashboardLayout from "./components/DashboardLayout";
 import DashboardPage from "./pages/DashboardPage";
@@ -23,27 +23,31 @@ const API = `${BACKEND_URL}/api`;
 // Create MSAL instance
 const msalInstance = new PublicClientApplication(msalConfig);
 
-// Account selection logic (if you have multiple accounts)
-const accounts = msalInstance.getAllAccounts();
-if (accounts.length > 0) {
-  msalInstance.setActiveAccount(accounts[0]);
-}
-
-msalInstance.addEventCallback((event) => {
-  if (event.eventType === EventType.LOGIN_SUCCESS && event.payload.account) {
-    const account = event.payload.account;
-    msalInstance.setActiveAccount(account);
-  }
+// Initialize MSAL
+msalInstance.initialize().then(() => {
+  // Handle redirect promise
+  msalInstance.handleRedirectPromise().then((response) => {
+    if (response) {
+      const account = response.account;
+      msalInstance.setActiveAccount(account);
+    } else {
+      // Check if there are any accounts
+      const accounts = msalInstance.getAllAccounts();
+      if (accounts.length > 0) {
+        msalInstance.setActiveAccount(accounts[0]);
+      }
+    }
+  });
 });
 
 // Axios interceptor to add Azure AD auth token
 axios.interceptors.request.use(
   async (config) => {
-    const account = msalInstance.getActiveAccount();
-    if (account) {
+    const accounts = msalInstance.getAllAccounts();
+    if (accounts.length > 0) {
       try {
         const response = await msalInstance.acquireTokenSilent({
-          account,
+          account: accounts[0],
           ...loginRequest,
         });
         config.headers.Authorization = `Bearer ${response.accessToken}`;
@@ -56,105 +60,66 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-function AppContent() {
+function MainRoutes() {
+  const isAuthenticated = useIsAuthenticated();
   const { instance, accounts } = useMsal();
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
 
+  // Redirect to login if not authenticated
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (accounts && accounts.length > 0) {
-        try {
-          const response = await instance.acquireTokenSilent({
-            account: accounts[0],
-            ...loginRequest,
-          });
-
-          // Fetch user data from backend
-          const userResponse = await axios.get(`${API}/auth/me/azure`, {
-            headers: {
-              Authorization: `Bearer ${response.accessToken}`,
-            },
-          });
-
-          setUser(userResponse.data);
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        }
-      }
-      setLoading(false);
-    };
-
-    fetchUserData();
-  }, [accounts, instance]);
+    if (!isAuthenticated && window.location.pathname !== "/login") {
+      window.location.href = "/login";
+    }
+  }, [isAuthenticated]);
 
   const handleLogout = () => {
     instance.logoutRedirect({
-      postLogoutRedirectUri: "/",
+      postLogoutRedirectUri: "/login",
     });
-    setUser(null);
   };
 
-  if (loading) {
+  // Mock user object for now - will be populated from backend
+  const user = accounts && accounts.length > 0 ? {
+    email: accounts[0].username,
+    name: accounts[0].name || accounts[0].username,
+    role: "user" // Will be fetched from backend
+  } : null;
+
+  if (!isAuthenticated) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Chargement...</div>
-      </div>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
     );
   }
 
-  const isAuthenticated = accounts && accounts.length > 0;
-
   return (
-    <div className="App">
-      <Toaster />
-      <BrowserRouter>
-        <Routes>
-          <Route
-            path="/login"
-            element={
-              <UnauthenticatedTemplate>
-                <LoginPage />
-              </UnauthenticatedTemplate>
-            }
-          />
-          <Route
-            path="/"
-            element={
-              <AuthenticatedTemplate>
-                <DashboardLayout user={user} onLogout={handleLogout} />
-              </AuthenticatedTemplate>
-            }
-          >
-            <Route index element={<DashboardPage user={user} />} />
-            <Route path="messages/:type" element={<MessagesPage user={user} />} />
-            <Route path="message/new/:type" element={<MessageDetailPage user={user} />} />
-            <Route path="message/:id" element={<MessageDetailPage user={user} />} />
-            <Route path="services" element={<ServicesPage user={user} />} />
-            <Route path="correspondents" element={<CorrespondentsPage user={user} />} />
-            <Route path="users" element={<UsersPage user={user} />} />
-            <Route path="user-roles" element={<UserRolesPage user={user} />} />
-            <Route path="import" element={<ImportPage user={user} />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-
-      {/* Redirect to login if not authenticated */}
-      <UnauthenticatedTemplate>
-        <BrowserRouter>
-          <Routes>
-            <Route path="*" element={<Navigate to="/login" replace />} />
-          </Routes>
-        </BrowserRouter>
-      </UnauthenticatedTemplate>
-    </div>
+    <Routes>
+      <Route path="/login" element={<Navigate to="/" replace />} />
+      <Route path="/" element={<DashboardLayout user={user} onLogout={handleLogout} />}>
+        <Route index element={<DashboardPage user={user} />} />
+        <Route path="messages/:type" element={<MessagesPage user={user} />} />
+        <Route path="message/new/:type" element={<MessageDetailPage user={user} />} />
+        <Route path="message/:id" element={<MessageDetailPage user={user} />} />
+        <Route path="services" element={<ServicesPage user={user} />} />
+        <Route path="correspondents" element={<CorrespondentsPage user={user} />} />
+        <Route path="users" element={<UsersPage user={user} />} />
+        <Route path="user-roles" element={<UserRolesPage user={user} />} />
+        <Route path="import" element={<ImportPage user={user} />} />
+      </Route>
+    </Routes>
   );
 }
 
 function App() {
   return (
     <MsalProvider instance={msalInstance}>
-      <AppContent />
+      <div className="App">
+        <Toaster />
+        <BrowserRouter>
+          <MainRoutes />
+        </BrowserRouter>
+      </div>
     </MsalProvider>
   );
 }
