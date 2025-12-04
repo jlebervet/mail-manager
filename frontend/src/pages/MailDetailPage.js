@@ -15,6 +15,7 @@ import { ArrowLeft, Upload, X, Download, Save, Send, Reply, ExternalLink, ScanBa
 import { API } from "../App";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
+import BarcodeScanner from "../components/BarcodeScanner";
 
 const MailDetailPage = ({ user }) => {
   const params = useParams();
