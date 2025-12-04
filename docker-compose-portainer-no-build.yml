@@ -1,0 +1,163 @@
+# ============================================
+# Mail Manager - Stack Portainer (Sans Build)
+# ============================================
+# Version pour Portainer Web Editor - Utilise des images au lieu de builder
+# 
+# IMPORTANT: Cette version n'utilise PAS de build
+# Les conteneurs backend et frontend fonctionnent en mode développement
+# 
+# VARIABLES REQUISES (à configurer dans Portainer) :
+# - AZURE_TENANT_ID
+# - AZURE_CLIENT_ID  
+# - AZURE_SCOPE
+# - REACT_APP_BACKEND_URL
+# - REACT_APP_AZURE_REDIRECT_URI
+# - REACT_APP_AZURE_CLIENT_ID
+# - REACT_APP_AZURE_TENANT_ID
+# - REACT_APP_AZURE_SCOPE
+# - MONGO_INITDB_ROOT_USERNAME
+# - MONGO_INITDB_ROOT_PASSWORD
+#
+# ============================================
+
+version: '3.8'
+
+services:
+  # ============================================
+  # Service 1 : Base de Données MongoDB
+  # ============================================
+  mongodb:
+    image: mongo:7.0
+    container_name: mail-manager-mongodb
+    restart: unless-stopped
+    
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-changeme123}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE:-mail_management_db}
+    
+    ports:
+      - "${MONGODB_PORT:-27017}:27017"
+    
+    volumes:
+      - mongodb_data:/data/db
+    
+    networks:
+      - mail-manager-network
+    
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ============================================
+  # Service 2 : Backend API (FastAPI)
+  # ============================================
+  # NOTE: Cette version utilise Python slim et installe les dépendances au démarrage
+  backend:
+    image: python:3.11-slim
+    container_name: mail-manager-backend
+    restart: unless-stopped
+    
+    working_dir: /app
+    
+    environment:
+      - MONGO_URL=mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-changeme123}@mongodb:27017
+      - DB_NAME=${MONGO_INITDB_DATABASE:-mail_management_db}
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID}
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+      - AZURE_SCOPE=${AZURE_SCOPE}
+    
+    ports:
+      - "${BACKEND_PORT:-8888}:8888"
+    
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    
+    networks:
+      - mail-manager-network
+    
+    # Volume - DOIT pointer vers le code source cloné sur votre serveur
+    # Remplacez /opt/mail-manager par le chemin où vous avez cloné le repo
+    volumes:
+      - /opt/mail-manager/backend:/app
+    
+    # Installation des dépendances et démarrage
+    command: >
+      sh -c "pip install --no-cache-dir -r requirements.txt &&
+             uvicorn server:app --host 0.0.0.0 --port 8888 --reload"
+
+  # ============================================
+  # Service 3 : Frontend (React)
+  # ============================================
+  # NOTE: Cette version utilise Node.js et démarre en mode développement
+  frontend:
+    image: node:18-alpine
+    container_name: mail-manager-frontend
+    restart: unless-stopped
+    
+    working_dir: /app
+    
+    environment:
+      - HOST=0.0.0.0
+      - PORT=3333
+      - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-http://localhost:8888}
+      - REACT_APP_AZURE_CLIENT_ID=${REACT_APP_AZURE_CLIENT_ID}
+      - REACT_APP_AZURE_TENANT_ID=${REACT_APP_AZURE_TENANT_ID}
+      - REACT_APP_AZURE_REDIRECT_URI=${REACT_APP_AZURE_REDIRECT_URI}
+      - REACT_APP_AZURE_SCOPE=${REACT_APP_AZURE_SCOPE}
+    
+    ports:
+      - "${FRONTEND_PORT:-3333}:3333"
+    
+    depends_on:
+      - backend
+    
+    networks:
+      - mail-manager-network
+    
+    # Volume - DOIT pointer vers le code source cloné sur votre serveur
+    # Remplacez /opt/mail-manager par le chemin où vous avez cloné le repo
+    volumes:
+      - /opt/mail-manager/frontend:/app
+    
+    # Installation des dépendances et démarrage
+    command: >
+      sh -c "yarn install --frozen-lockfile &&
+             yarn start"
+
+networks:
+  mail-manager-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
+
+# ============================================
+# INSTRUCTIONS D'UTILISATION
+# ============================================
+#
+# AVANT DE DÉPLOYER CETTE STACK:
+#
+# 1. Clonez le repo sur votre serveur:
+#    ssh user@votre-serveur
+#    cd /opt
+#    git clone <votre-repo-github> mail-manager
+#
+# 2. Vérifiez le chemin:
+#    ls /opt/mail-manager/backend
+#    ls /opt/mail-manager/frontend
+#
+# 3. Modifiez les volumes dans ce fichier si nécessaire:
+#    Remplacez /opt/mail-manager par votre chemin réel
+#
+# 4. Dans Portainer, ajoutez les variables d'environnement
+#
+# 5. Deploy the stack
+#
+# ============================================
