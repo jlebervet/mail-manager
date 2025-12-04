@@ -211,19 +211,17 @@ frontend:
 metadata:
   created_by: "main_agent"
   version: "1.0"
-  test_sequence: 1
+  test_sequence: 2
   run_ui: true
 
 test_plan:
-  current_focus:
-    - "Import CSV - Page frontend"
-    - "Import CSV - Navigation"
-    - "Affichage des émojis dans Type de message"
-    - "Import CSV - Endpoint API"
+  current_focus: []
   stuck_tasks: []
-  test_all: true
+  test_all: false
   test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
     message: "Toutes les tâches prioritaires ont été complétées : 1) Import CSV fonctionnel (backend + frontend), 2) Émojis corrigés dans le dropdown Type de message, 3) Fichiers renommés pour cohérence. L'application doit être testée end-to-end pour vérifier que toutes les fonctionnalités existantes fonctionnent toujours et que les nouvelles fonctionnalités sont opérationnelles. Credentials : admin@mairie.fr / admin123"
+  - agent: "testing"
+    message: "Tests end-to-end complétés avec succès. Toutes les fonctionnalités testées sont opérationnelles : Import CSV (upload, traitement, affichage résultats), Types de messages avec émojis (4 options affichées correctement), Scan code-barres pour recommandé (UI fonctionnelle), Navigation complète, Création/gestion de messages, Fonction répondre. Aucune erreur critique détectée. Application prête pour utilisation."
