@@ -86,9 +86,9 @@ const MailsPage = ({ user }) => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 mb-2">
-            Courrier {type === "entrant" ? "entrant" : "sortant"}
+            Message {type === "entrant" ? "entrant" : "sortant"}
           </h1>
-          <p className="text-slate-600">{filteredMails.length} courrier(s)</p>
+          <p className="text-slate-600">{filteredMails.length} message(s)</p>
         </div>
         <Button
           data-testid="create-mail-button"
@@ -96,7 +96,7 @@ const MailsPage = ({ user }) => {
           className="bg-blue-600 hover:bg-blue-700"
         >
           <Plus className="mr-2 h-4 w-4" />
-          Nouveau courrier
+          Nouveau message
         </Button>
       </div>
 
@@ -153,7 +153,7 @@ const MailsPage = ({ user }) => {
       ) : filteredMails.length === 0 ? (
         <Card className="border-0 shadow-sm">
           <CardContent className="py-12">
-            <p className="text-center text-slate-500">Aucun courrier trouvé</p>
+            <p className="text-center text-slate-500">Aucun message trouvé</p>
           </CardContent>
         </Card>
       ) : (

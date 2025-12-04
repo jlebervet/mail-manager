@@ -15,8 +15,8 @@ const DashboardLayout = ({ user, onLogout }) => {
 
   const menuItems = [
     { path: "/", label: "Tableau de bord", icon: Home, exact: true },
-    { path: "/mails/entrant", label: "Courrier entrant", icon: Mail },
-    { path: "/mails/sortant", label: "Courrier sortant", icon: MailOpen },
+    { path: "/mails/entrant", label: "Message entrant", icon: Mail },
+    { path: "/mails/sortant", label: "Message sortant", icon: MailOpen },
     { path: "/services", label: "Services", icon: Building2 },
     { path: "/correspondents", label: "Correspondants", icon: Users },
   ];
@@ -35,7 +35,7 @@ const DashboardLayout = ({ user, onLogout }) => {
               <Building2 className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-slate-900">Courrier</h1>
+              <h1 className="text-lg font-bold text-slate-900">Message</h1>
               <p className="text-xs text-slate-500">Multi-services</p>
             </div>
           </div>

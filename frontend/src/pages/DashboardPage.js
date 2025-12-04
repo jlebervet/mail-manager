@@ -36,14 +36,14 @@ const DashboardPage = ({ user }) => {
 
   const statCards = [
     {
-      title: "Courrier entrant",
+      title: "Message entrant",
       value: stats?.entrant_mails || 0,
       icon: Mail,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
     },
     {
-      title: "Courrier sortant",
+      title: "Message sortant",
       value: stats?.sortant_mails || 0,
       icon: MailOpen,
       color: "text-green-600",
@@ -122,8 +122,8 @@ const DashboardPage = ({ user }) => {
       <Card className="border-0 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Courriers qui me sont assignés</CardTitle>
-            <p className="text-sm text-slate-600 mt-1">{stats?.assigned_to_me || 0} courrier(s)</p>
+            <CardTitle>Messages qui me sont assignés</CardTitle>
+            <p className="text-sm text-slate-600 mt-1">{stats?.assigned_to_me || 0} message(s)</p>
           </div>
           <TrendingUp className="h-5 w-5 text-blue-600" />
         </CardHeader>
@@ -132,11 +132,11 @@ const DashboardPage = ({ user }) => {
       {/* Recent Mails */}
       <Card className="border-0 shadow-sm">
         <CardHeader>
-          <CardTitle>Courriers récents</CardTitle>
+          <CardTitle>Messages récents</CardTitle>
         </CardHeader>
         <CardContent>
           {recentMails.length === 0 ? (
-            <p className="text-center text-slate-500 py-8">Aucun courrier récent</p>
+            <p className="text-center text-slate-500 py-8">Aucun message récent</p>
           ) : (
             <div className="space-y-3">
               {recentMails.map((mail) => (
@@ -174,7 +174,7 @@ const DashboardPage = ({ user }) => {
           className="h-24 text-lg bg-blue-600 hover:bg-blue-700"
         >
           <Mail className="mr-2 h-5 w-5" />
-          Nouveau courrier entrant
+          Nouveau message entrant
         </Button>
         <Button
           data-testid="quick-new-sortant"
@@ -183,7 +183,7 @@ const DashboardPage = ({ user }) => {
           className="h-24 text-lg border-blue-600 text-blue-600 hover:bg-blue-50"
         >
           <MailOpen className="mr-2 h-5 w-5" />
-          Nouveau courrier sortant
+          Nouveau message sortant
         </Button>
       </div>
     </div>

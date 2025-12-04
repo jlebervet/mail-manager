@@ -39,7 +39,7 @@ const MailDetailPage = ({ user }) => {
   const [assignedTo, setAssignedTo] = useState(null);
   
   // New fields
-  const [messageType, setMessageType] = useState("courrier");
+  const [messageType, setMessageType] = useState("message");
   const [isRegistered, setIsRegistered] = useState(false);
   const [registeredNumber, setRegisteredNumber] = useState("");
   const [scanningBarcode, setScanningBarcode] = useState(false);
@@ -89,7 +89,7 @@ const MailDetailPage = ({ user }) => {
       setContent(mailData.content);
       setStatus(mailData.status);
       setAttachments(mailData.attachments || []);
-      setMessageType(mailData.message_type || "courrier");
+      setMessageType(mailData.message_type || "message");
       setIsRegistered(mailData.is_registered || false);
       setRegisteredNumber(mailData.registered_number || "");
       
@@ -346,7 +346,7 @@ const MailDetailPage = ({ user }) => {
   };
 
   const messageTypeLabels = {
-    courrier: "Courrier",
+    message: "Message",
     email: "Email",
     depot_main_propre: "Dépôt main propre",
     colis: "Colis"
@@ -405,7 +405,7 @@ const MailDetailPage = ({ user }) => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="courrier">📧 Courrier</SelectItem>
+                        <SelectItem value="message">📧 Message</SelectItem>
                         <SelectItem value="email">✉️ Email</SelectItem>
                         <SelectItem value="depot_main_propre">🤝 Dépôt main propre</SelectItem>
                         <SelectItem value="colis">📦 Colis</SelectItem>
@@ -413,7 +413,7 @@ const MailDetailPage = ({ user }) => {
                     </Select>
                   </div>
 
-                  {(messageType === "courrier" || messageType === "colis") && (
+                  {(messageType === "message" || messageType === "colis") && (
                     <div className="space-y-4 p-4 bg-slate-50 rounded-lg">
                       <div className="flex items-center space-x-2">
                         <Checkbox

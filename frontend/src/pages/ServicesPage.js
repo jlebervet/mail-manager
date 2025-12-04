@@ -154,7 +154,7 @@ const ServicesPage = ({ user }) => {
       
       if (response.data.archived_mails > 0) {
         toast.success(
-          `Service archivé avec succès. ${response.data.archived_mails} courrier(s) associé(s) également archivé(s).`,
+          `Service archivé avec succès. ${response.data.archived_mails} message(s) associé(s) également archivé(s).`,
           { duration: 5000 }
         );
       } else {
@@ -424,7 +424,7 @@ const ServicesPage = ({ user }) => {
                 <p className="text-sm font-medium text-amber-900">Cette action va :</p>
                 <ul className="text-sm text-amber-800 space-y-1 ml-4">
                   <li>• Archiver le service (il n'apparaîtra plus dans les listes actives)</li>
-                  <li>• Archiver tous les courriers associés à ce service</li>
+                  <li>• Archiver tous les messages associés à ce service</li>
                   <li>• Conserver toutes les données (pas de suppression définitive)</li>
                 </ul>
               </div>
@@ -460,7 +460,7 @@ const ServicesPage = ({ user }) => {
               <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                 <p className="text-sm text-green-800">
                   Le service sera de nouveau visible et accessible dans les listes actives.
-                  Les courriers archivés avec ce service resteront archivés.
+                  Les messages archivés avec ce service resteront archivés.
                 </p>
               </div>
             </AlertDialogDescription>
