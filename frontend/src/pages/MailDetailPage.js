@@ -43,7 +43,7 @@ const MailDetailPage = ({ user }) => {
   const [messageType, setMessageType] = useState("message");
   const [isRegistered, setIsRegistered] = useState(false);
   const [registeredNumber, setRegisteredNumber] = useState("");
-  const [scanningBarcode, setScanningBarcode] = useState(false);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   
   const [correspondents, setCorrespondents] = useState([]);
   const [services, setServices] = useState([]);
