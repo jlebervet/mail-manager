@@ -14,6 +14,7 @@ import ServicesPage from "./pages/ServicesPage";
 import CorrespondentsPage from "./pages/CorrespondentsPage";
 import UsersPage from "./pages/UsersPage";
 import ImportPage from "./pages/ImportPage";
+import UserRolesPage from "./pages/UserRolesPage";
 import { Toaster } from "./components/ui/sonner";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
