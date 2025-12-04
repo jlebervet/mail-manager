@@ -63,11 +63,11 @@ MONGO_URL="mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017"
 
 # Ports Configuration
 echo -e "${GREEN}4. Configuration des ports${NC}"
-read -p "Port backend [8001]: " BACKEND_PORT
-BACKEND_PORT=${BACKEND_PORT:-8001}
+read -p "Port backend [8888]: " BACKEND_PORT
+BACKEND_PORT=${BACKEND_PORT:-8888}
 
-read -p "Port frontend [3000]: " FRONTEND_PORT
-FRONTEND_PORT=${FRONTEND_PORT:-3000}
+read -p "Port frontend [3333]: " FRONTEND_PORT
+FRONTEND_PORT=${FRONTEND_PORT:-3333}
 
 read -p "Port MongoDB [27017]: " MONGODB_PORT
 MONGODB_PORT=${MONGODB_PORT:-27017}

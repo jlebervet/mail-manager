@@ -38,7 +38,7 @@ services:
       - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
       - AZURE_SCOPE=${AZURE_SCOPE}
     ports:
-      - "${BACKEND_PORT:-8001}:8001"
+      - "${BACKEND_PORT:-8888}:8888"
     depends_on:
       mongodb:
         condition: service_healthy
@@ -46,7 +46,7 @@ services:
       - mail-manager-network
     volumes:
       - ./backend:/app
-    command: uvicorn server:app --host 0.0.0.0 --port 8001 --reload
+    command: uvicorn server:app --host 0.0.0.0 --port 8888 --reload
 
   # React Frontend
   frontend:
@@ -54,7 +54,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-http://localhost:8001}
+        - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-http://localhost:8888}
         - REACT_APP_AZURE_CLIENT_ID=${REACT_APP_AZURE_CLIENT_ID}
         - REACT_APP_AZURE_TENANT_ID=${REACT_APP_AZURE_TENANT_ID}
         - REACT_APP_AZURE_REDIRECT_URI=${REACT_APP_AZURE_REDIRECT_URI}
@@ -62,7 +62,7 @@ services:
     container_name: mail-manager-frontend
     restart: unless-stopped
     ports:
-      - "${FRONTEND_PORT:-3000}:80"
+      - "${FRONTEND_PORT:-3333}:80"
     depends_on:
       - backend
     networks:
