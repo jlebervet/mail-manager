@@ -115,7 +115,7 @@ services:
     # Build depuis le Dockerfile local
     build:
       context: ./frontend
-      dockerfile: Dockerfile.portainer
+      dockerfile: Dockerfile.simple
       # Variables de build (baked into the build)
       args:
         - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-http://localhost:8888}
