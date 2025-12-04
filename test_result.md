@@ -111,11 +111,14 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Endpoint POST /api/import/csv créé et testé avec succès via curl. 3 correspondants et 3 messages importés sans erreur."
+      - working: true
+        agent: "testing"
+        comment: "Testé via UI avec fichier CSV contenant 2 contacts et 2 messages. Import réussi : 2 contacts créés, 2 messages importés, 0 erreurs. Les données importées sont visibles dans les listes de messages et correspondants. Fonctionnalité 100% opérationnelle."
 
 frontend:
   - task: "Import CSV - Page frontend"
@@ -124,11 +127,14 @@ frontend:
     file: "/app/frontend/src/pages/ImportPage.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Page d'import complète avec upload de fichier, modèle CSV téléchargeable, gestion des erreurs et affichage des résultats. Lien ajouté dans la sidebar (visible admin uniquement)."
+      - working: true
+        agent: "testing"
+        comment: "Page testée avec succès. Upload de fichier fonctionne (drag & drop et sélection). Bouton de téléchargement du modèle visible. Résultats d'import s'affichent correctement avec statistiques (contacts créés, messages importés, erreurs). Interface claire et fonctionnelle."
 
   - task: "Import CSV - Navigation"
     implemented: true
@@ -136,19 +142,22 @@ frontend:
     file: "/app/frontend/src/App.js, /app/frontend/src/components/DashboardLayout.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Route /import ajoutée dans App.js. Lien 'Import CSV' ajouté dans DashboardLayout, visible uniquement pour les administrateurs."
+      - working: true
+        agent: "testing"
+        comment: "Navigation testée et fonctionnelle. Le lien 'Import CSV' apparaît dans la sidebar pour les administrateurs. Redirection vers /import fonctionne correctement. Tous les autres liens de navigation fonctionnent également (Dashboard, Messages entrant/sortant, Services, Correspondants, Utilisateurs)."
 
   - task: "Affichage des émojis dans Type de message"
     implemented: true
     working: true
     file: "/app/frontend/src/pages/MessageDetailPage.js"
-    stuck_count: 1
+    stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "previous"
@@ -156,6 +165,9 @@ frontend:
       - working: true
         agent: "main"
         comment: "Correction appliquée : utilisation de <span> dans SelectTrigger pour afficher les labels avec émojis. Emoji Email changé de ✉️ à 📨 puis à 💌 pour meilleure compatibilité. Tous les émojis s'affichent maintenant dans le dropdown."
+      - working: true
+        agent: "testing"
+        comment: "Testé avec succès. Les 4 options avec émojis s'affichent correctement dans le dropdown : 📧 Message, 💌 Email, 🤝 Dépôt main propre, 📦 Colis. L'émoji sélectionné s'affiche correctement dans le trigger. Fonctionnalité parfaitement opérationnelle."
 
   - task: "Renommage Courrier -> Message"
     implemented: true
@@ -163,11 +175,38 @@ frontend:
     file: "/app/frontend/src/pages/MessagesPage.js, /app/frontend/src/pages/MessageDetailPage.js, /app/frontend/src/App.js"
     stuck_count: 0
     priority: "low"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Fichiers MailsPage.js et MailDetailPage.js renommés en MessagesPage.js et MessageDetailPage.js. Imports et exports mis à jour dans App.js. Application fonctionne correctement après le renommage."
+      - working: true
+        agent: "testing"
+        comment: "Renommage vérifié. Tous les fichiers sont correctement nommés et les imports fonctionnent. Aucune erreur de navigation ou de console. L'application fonctionne normalement après le renommage."
+
+  - task: "Scan de code-barres pour recommandé"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/MessageDetailPage.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Fonctionnalité testée. Lorsque le type de message est 'Message' ou 'Colis', la checkbox 'Recommandé avec accusé de réception' apparaît. Quand activée, le champ de numéro de recommandé et le bouton de scan de code-barres s'affichent correctement. Interface fonctionnelle (scan hardware non testé car limitation système)."
+
+  - task: "Création et gestion de messages"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/MessageDetailPage.js, /app/frontend/src/pages/MessagesPage.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Flux complet de création de message testé avec succès. Tous les champs fonctionnent (type, sujet, contenu, correspondant, service). Message créé avec succès et visible dans la liste. Fonction 'Répondre' fonctionne correctement avec préfixe 'Re:' et pré-remplissage des informations. Filtres de recherche et statut opérationnels."
 
 metadata:
   created_by: "main_agent"
