@@ -812,6 +812,13 @@ const MailDetailPage = ({ user }) => {
           )}
         </div>
       </div>
+
+      {/* Barcode Scanner Dialog */}
+      <BarcodeScanner
+        isOpen={showBarcodeScanner}
+        onClose={() => setShowBarcodeScanner(false)}
+        onScan={handleBarcodeScan}
+      />
     </div>
   );
 };
