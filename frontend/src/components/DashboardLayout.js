@@ -15,8 +15,8 @@ const DashboardLayout = ({ user, onLogout }) => {
 
   const menuItems = [
     { path: "/", label: "Tableau de bord", icon: Home, exact: true },
-    { path: "/mails/entrant", label: "Message entrant", icon: Mail },
-    { path: "/mails/sortant", label: "Message sortant", icon: MailOpen },
+    { path: "/messages/entrant", label: "Message entrant", icon: Mail },
+    { path: "/messages/sortant", label: "Message sortant", icon: MailOpen },
     { path: "/services", label: "Services", icon: Building2 },
     { path: "/correspondents", label: "Correspondants", icon: Users },
   ];
