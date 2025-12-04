@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
-import { Home, Mail, MailOpen, Building2, Users, UserCog, LogOut, Settings, Upload } from "lucide-react";
+import { Home, Mail, MailOpen, Building2, Users, UserCog, LogOut, Settings, Upload, Shield } from "lucide-react";
 
 const DashboardLayout = ({ user, onLogout }) => {
   const navigate = useNavigate();
@@ -23,6 +23,7 @@ const DashboardLayout = ({ user, onLogout }) => {
 
   if (user?.role === "admin") {
     menuItems.push({ path: "/users", label: "Utilisateurs", icon: UserCog });
+    menuItems.push({ path: "/user-roles", label: "Gestion des Rôles", icon: Shield });
     menuItems.push({ path: "/import", label: "Import CSV", icon: Upload });
   }
 
