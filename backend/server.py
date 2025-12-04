@@ -861,6 +861,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+@app.on_event("startup")
+async def load_azure_config():
+    """Load Azure AD OpenID configuration on startup"""
+    await azure_scheme.openid_config.load_config()
+    logger.info("Azure AD configuration loaded successfully")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
