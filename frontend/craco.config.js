@@ -36,6 +36,22 @@ const webpackConfig = {
     },
     configure: (webpackConfig) => {
 
+      // Configure output with content hash for cache busting
+      webpackConfig.output = {
+        ...webpackConfig.output,
+        filename: 'static/js/[name].[contenthash:8].js',
+        chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
+      };
+
+      // Configure CSS output with content hash
+      const MiniCssExtractPlugin = webpackConfig.plugins.find(
+        plugin => plugin.constructor.name === 'MiniCssExtractPlugin'
+      );
+      if (MiniCssExtractPlugin) {
+        MiniCssExtractPlugin.options.filename = 'static/css/[name].[contenthash:8].css';
+        MiniCssExtractPlugin.options.chunkFilename = 'static/css/[name].[contenthash:8].chunk.css';
+      }
+
       // Disable hot reload completely if environment variable is set
       if (config.disableHotReload) {
         // Remove hot reload related plugins
