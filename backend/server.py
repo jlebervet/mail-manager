@@ -668,6 +668,168 @@ async def get_stats(current_user: dict = Depends(get_current_user)):
         "assigned_to_me": assigned_to_me
     }
 
+# ===== IMPORT ROUTES =====
+
+class ImportStats(BaseModel):
+    correspondents_created: int
+    correspondents_updated: int
+    mails_created: int
+    errors: List[str]
+
+@api_router.post("/import/csv", response_model=ImportStats)
+async def import_csv(
+    file: UploadFile = File(...),
+    admin_user: dict = Depends(require_admin)
+):
+    """Import correspondents and mails from CSV (admin only)"""
+    import csv
+    import io
+    
+    stats = {
+        "correspondents_created": 0,
+        "correspondents_updated": 0,
+        "mails_created": 0,
+        "errors": []
+    }
+    
+    try:
+        # Read CSV file
+        contents = await file.read()
+        decoded = contents.decode('utf-8')
+        csv_reader = csv.DictReader(io.StringIO(decoded))
+        
+        # Get default service for imported mails
+        default_service = await db.services.find_one({}, {"_id": 0})
+        if not default_service:
+            raise HTTPException(status_code=400, detail="Aucun service disponible. Créez au moins un service avant d'importer.")
+        
+        row_number = 0
+        for row in csv_reader:
+            row_number += 1
+            try:
+                # Extract correspondent data
+                nom = row.get('nom', '').strip()
+                prenom = row.get('prenom', '').strip()
+                tel_fixe = row.get('telephone_fixe', '').strip()
+                tel_mobile = row.get('telephone_mobile', '').strip()
+                email = row.get('adresse_mail', '').strip()
+                adresse = row.get('adresse_postale', '').strip()
+                
+                # Extract message data
+                titre = row.get('titre_message', '').strip()
+                type_msg = row.get('type', 'entrant').strip().lower()
+                statut = row.get('statut', 'en_cours').strip().lower()
+                
+                # Validate required fields
+                if not nom or not titre:
+                    stats["errors"].append(f"Ligne {row_number}: nom et titre_message sont requis")
+                    continue
+                
+                # Create full name
+                full_name = f"{prenom} {nom}".strip() if prenom else nom
+                
+                # Check if correspondent exists
+                correspondent = await db.correspondents.find_one(
+                    {"name": full_name},
+                    {"_id": 0}
+                )
+                
+                if correspondent:
+                    # Update existing correspondent
+                    update_data = {}
+                    if email and not correspondent.get('email'):
+                        update_data['email'] = email
+                    if tel_fixe or tel_mobile:
+                        phone = tel_mobile if tel_mobile else tel_fixe
+                        if not correspondent.get('phone'):
+                            update_data['phone'] = phone
+                    if adresse and not correspondent.get('address'):
+                        update_data['address'] = adresse
+                    
+                    if update_data:
+                        await db.correspondents.update_one(
+                            {"id": correspondent["id"]},
+                            {"$set": update_data}
+                        )
+                        stats["correspondents_updated"] += 1
+                    
+                    correspondent_id = correspondent["id"]
+                else:
+                    # Create new correspondent
+                    phone = tel_mobile if tel_mobile else tel_fixe
+                    correspondent_data = Correspondent(
+                        name=full_name,
+                        email=email if email else None,
+                        phone=phone if phone else None,
+                        address=adresse if adresse else None,
+                        organization=None
+                    )
+                    
+                    doc = correspondent_data.model_dump()
+                    doc['created_at'] = doc['created_at'].isoformat()
+                    await db.correspondents.insert_one(doc)
+                    
+                    correspondent_id = correspondent_data.id
+                    stats["correspondents_created"] += 1
+                
+                # Determine status
+                if statut in ['archivé', 'archive', 'archivés']:
+                    mail_status = 'archive'
+                elif statut in ['en_cours', 'en cours', 'recu', 'reçu']:
+                    mail_status = 'recu'
+                else:
+                    mail_status = 'recu'
+                
+                # Determine type
+                if type_msg in ['sortant', 'envoyé', 'envoye', 'out']:
+                    mail_type = 'sortant'
+                else:
+                    mail_type = 'entrant'
+                
+                # Generate reference
+                count = await db.mails.count_documents({})
+                reference = f"MAIL-{datetime.now(timezone.utc).year}-{count + 1:05d}"
+                
+                # Create mail
+                mail = Mail(
+                    type=mail_type,
+                    reference=reference,
+                    subject=titre,
+                    content=f"Message importé depuis CSV\n\nTitre: {titre}",
+                    correspondent_id=correspondent_id,
+                    correspondent_name=full_name,
+                    service_id=default_service['id'],
+                    service_name=default_service['name'],
+                    status=mail_status,
+                    workflow=[
+                        WorkflowStep(
+                            status=mail_status,
+                            user_id=admin_user['sub'],
+                            user_name=admin_user['name'],
+                            comment="Import CSV"
+                        )
+                    ],
+                    message_type="courrier",
+                    is_registered=False
+                )
+                
+                doc = mail.model_dump()
+                doc['created_at'] = doc['created_at'].isoformat()
+                for step in doc['workflow']:
+                    step['timestamp'] = step['timestamp'].isoformat()
+                
+                await db.mails.insert_one(doc)
+                stats["mails_created"] += 1
+                
+            except Exception as e:
+                stats["errors"].append(f"Ligne {row_number}: {str(e)}")
+                continue
+        
+        return ImportStats(**stats)
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erreur lors du traitement du fichier: {str(e)}")
+
 # Include router
 app.include_router(api_router)
 
