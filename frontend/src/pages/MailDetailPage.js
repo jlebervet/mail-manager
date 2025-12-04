@@ -222,11 +222,12 @@ const MailDetailPage = ({ user }) => {
   };
 
   const startBarcodeScanning = () => {
-    if (barcodeInputRef.current) {
-      barcodeInputRef.current.focus();
-      setShowBarcodeScanner(true);
-      toast.info("Scannez le code-barres ou tapez le numéro");
-    }
+    setShowBarcodeScanner(true);
+  };
+
+  const handleBarcodeScan = (scannedCode) => {
+    setRegisteredNumber(scannedCode);
+    toast.success(`Code-barres scanné : ${scannedCode}`);
   };
 
   const handleReply = () => {
