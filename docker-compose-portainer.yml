@@ -1,0 +1,210 @@
+# ============================================
+# Mail Manager - Stack Portainer.io
+# ============================================
+# Version optimisée pour déploiement via Portainer Stacks
+# 
+# VARIABLES REQUISES (à configurer dans Portainer) :
+# - AZURE_TENANT_ID
+# - AZURE_CLIENT_ID  
+# - AZURE_SCOPE
+# - REACT_APP_BACKEND_URL
+# - REACT_APP_AZURE_REDIRECT_URI
+# - MONGO_INITDB_ROOT_USERNAME
+# - MONGO_INITDB_ROOT_PASSWORD
+#
+# Ports utilisés : Frontend=3333, Backend=8888, MongoDB=27017
+# ============================================
+
+version: '3.8'
+
+services:
+  # ============================================
+  # Service 1 : Base de Données MongoDB
+  # ============================================
+  mongodb:
+    image: mongo:7.0
+    container_name: mail-manager-mongodb
+    restart: unless-stopped
+    
+    # Configuration MongoDB
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-changeme123}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE:-mail_management_db}
+    
+    # Port MongoDB (27017 par défaut)
+    ports:
+      - "${MONGODB_PORT:-27017}:27017"
+    
+    # Persistance des données
+    volumes:
+      - mongodb_data:/data/db
+    
+    # Réseau isolé
+    networks:
+      - mail-manager-network
+    
+    # Health check pour s'assurer que MongoDB est prêt
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ============================================
+  # Service 2 : Backend API (FastAPI)
+  # ============================================
+  backend:
+    # Build depuis le Dockerfile local
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    
+    container_name: mail-manager-backend
+    restart: unless-stopped
+    
+    # Variables d'environnement du backend
+    environment:
+      # MongoDB
+      - MONGO_URL=mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-changeme123}@mongodb:27017
+      - DB_NAME=${MONGO_INITDB_DATABASE:-mail_management_db}
+      
+      # CORS (ajustez selon votre domaine)
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+      
+      # Azure AD Authentication
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID}
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+      - AZURE_SCOPE=${AZURE_SCOPE}
+    
+    # Port Backend (8888 par défaut)
+    ports:
+      - "${BACKEND_PORT:-8888}:8888"
+    
+    # Dépend de MongoDB (attend que MongoDB soit healthy)
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    
+    # Réseau
+    networks:
+      - mail-manager-network
+    
+    # Volume pour le code (en développement)
+    # Commentez cette ligne en production
+    volumes:
+      - ./backend:/app
+    
+    # Commande de démarrage avec hot reload
+    # En production, utilisez : --workers 4 (sans --reload)
+    command: uvicorn server:app --host 0.0.0.0 --port 8888 --reload
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8888/api/stats', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ============================================
+  # Service 3 : Frontend (React + Nginx)
+  # ============================================
+  frontend:
+    # Build depuis le Dockerfile local
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      # Variables de build (baked into the build)
+      args:
+        - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-http://localhost:8888}
+        - REACT_APP_AZURE_CLIENT_ID=${REACT_APP_AZURE_CLIENT_ID}
+        - REACT_APP_AZURE_TENANT_ID=${REACT_APP_AZURE_TENANT_ID}
+        - REACT_APP_AZURE_REDIRECT_URI=${REACT_APP_AZURE_REDIRECT_URI}
+        - REACT_APP_AZURE_SCOPE=${REACT_APP_AZURE_SCOPE}
+    
+    container_name: mail-manager-frontend
+    restart: unless-stopped
+    
+    # Port Frontend (3333 par défaut)
+    # Le conteneur expose le port 80 (Nginx), mappé vers 3333 sur l'hôte
+    ports:
+      - "${FRONTEND_PORT:-3333}:80"
+    
+    # Dépend du backend
+    depends_on:
+      - backend
+    
+    # Réseau
+    networks:
+      - mail-manager-network
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+# ============================================
+# Réseau Isolé pour l'Application
+# ============================================
+networks:
+  mail-manager-network:
+    driver: bridge
+    # Configuration réseau personnalisée (optionnel)
+    # ipam:
+    #   config:
+    #     - subnet: 172.20.0.0/16
+
+# ============================================
+# Volumes Persistants
+# ============================================
+volumes:
+  # Volume MongoDB - Contient toutes les données
+  # IMPORTANT: Ne supprimez pas ce volume sans backup !
+  mongodb_data:
+    driver: local
+    # Pour utiliser un chemin spécifique sur l'hôte :
+    # driver_opts:
+    #   type: none
+    #   device: /opt/mail-manager/mongodb
+    #   o: bind
+
+# ============================================
+# NOTES IMPORTANTES POUR PORTAINER
+# ============================================
+#
+# 1. VARIABLES D'ENVIRONNEMENT :
+#    Configurez les variables dans Portainer avant de déployer
+#    Stacks > Environment variables > Add variable
+#
+# 2. VOLUMES :
+#    Les volumes sont créés automatiquement
+#    Accédez-y via : Portainer > Volumes > mail-manager_mongodb_data
+#
+# 3. LOGS :
+#    Stacks > mail-manager > Logs (vue agrégée)
+#    Ou Containers > Sélectionner un conteneur > Logs
+#
+# 4. CONSOLE :
+#    Pour exécuter des commandes dans un conteneur :
+#    Containers > mail-manager-backend > Console > Connect
+#
+# 5. MISE À JOUR :
+#    Stacks > mail-manager > Editor > Update the stack
+#    Cochez "Re-pull images" pour rebuilder
+#
+# 6. BACKUP MONGODB :
+#    Volumes > mail-manager_mongodb_data > Export volume
+#    Ou utilisez mongodump via la console
+#
+# 7. PRODUCTION :
+#    - Retirez --reload du backend
+#    - Retirez le volume ./backend:/app
+#    - Utilisez --workers 4 pour le backend
+#    - Configurez des limites de ressources
+#
+# ============================================
