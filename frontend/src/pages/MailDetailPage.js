@@ -436,17 +436,10 @@ const MailDetailPage = ({ user }) => {
                           <div className="flex gap-2">
                             <Input
                               id="registered-number"
-                              ref={barcodeInputRef}
                               data-testid="registered-number-input"
                               value={registeredNumber}
-                              onChange={(e) => {
-                                setRegisteredNumber(e.target.value);
-                                if (showBarcodeScanner && e.target.value) {
-                                  setShowBarcodeScanner(false);
-                                }
-                              }}
+                              onChange={(e) => setRegisteredNumber(e.target.value)}
                               placeholder="Ex: 1A123456789FR"
-                              className={showBarcodeScanner ? "border-blue-500 ring-2 ring-blue-200" : ""}
                             />
                             <Button
                               type="button"
