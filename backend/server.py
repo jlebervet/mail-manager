@@ -246,6 +246,13 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
     """Get current user information"""
     return current_user
 
+@api_router.get("/auth/me/azure")
+async def get_azure_user_info(azure_user = Security(azure_scheme)):
+    """Get current Azure AD authenticated user information"""
+    from auth_dependencies import get_or_create_user_from_azure
+    user_info = await get_or_create_user_from_azure(azure_user)
+    return user_info
+
 @api_router.post("/auth/register", response_model=User)
 async def register(user_create: UserCreate, admin_user: dict = Depends(require_admin)):
     """Register a new user (admin only)"""
