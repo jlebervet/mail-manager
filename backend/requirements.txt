@@ -13,8 +13,11 @@ dnspython==2.8.0
 ecdsa==0.19.1
 email-validator==2.3.0
 fastapi==0.110.1
+fastapi-azure-auth==5.2.0
 flake8==7.3.0
 h11==0.16.0
+httpcore==1.0.9
+httpx==0.28.1
 idna==3.11
 iniconfig==2.3.0
 isort==7.0.0
@@ -38,6 +41,7 @@ pyasn1==0.6.1
 pycodestyle==2.14.0
 pycparser==2.23
 pydantic==2.12.4
+pydantic-settings==2.12.0
 pydantic_core==2.41.5
 pyflakes==3.4.0
 Pygments==2.19.2
