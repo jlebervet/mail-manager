@@ -347,10 +347,10 @@ const MailDetailPage = ({ user }) => {
   };
 
   const messageTypeLabels = {
-    message: "Message",
-    email: "Email",
-    depot_main_propre: "Dépôt main propre",
-    colis: "Colis"
+    message: "📧 Message",
+    email: "✉️ Email",
+    depot_main_propre: "🤝 Dépôt main propre",
+    colis: "📦 Colis"
   };
 
   return (
