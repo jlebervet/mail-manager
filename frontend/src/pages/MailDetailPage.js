@@ -441,12 +441,12 @@ const MailDetailPage = ({ user }) => {
                               value={registeredNumber}
                               onChange={(e) => {
                                 setRegisteredNumber(e.target.value);
-                                if (scanningBarcode && e.target.value) {
-                                  setScanningBarcode(false);
+                                if (showBarcodeScanner && e.target.value) {
+                                  setShowBarcodeScanner(false);
                                 }
                               }}
                               placeholder="Ex: 1A123456789FR"
-                              className={scanningBarcode ? "border-blue-500 ring-2 ring-blue-200" : ""}
+                              className={showBarcodeScanner ? "border-blue-500 ring-2 ring-blue-200" : ""}
                             />
                             <Button
                               type="button"
