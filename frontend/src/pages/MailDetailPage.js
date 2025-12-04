@@ -348,7 +348,7 @@ const MailDetailPage = ({ user }) => {
 
   const messageTypeLabels = {
     message: "📧 Message",
-    email: "📨 Email",
+    email: "💌 Email",
     depot_main_propre: "🤝 Dépôt main propre",
     colis: "📦 Colis"
   };
