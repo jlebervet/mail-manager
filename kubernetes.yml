@@ -1,0 +1,261 @@
+# Kubernetes Deployment Configuration
+# Pour déploiement sur cluster Kubernetes
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mail-manager
+
+---
+# ConfigMap pour les variables d'environnement non-sensibles
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mail-manager-config
+  namespace: mail-manager
+data:
+  DB_NAME: "mail_management_db"
+  BACKEND_PORT: "8001"
+  FRONTEND_PORT: "80"
+
+---
+# Secret pour les variables sensibles
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mail-manager-secrets
+  namespace: mail-manager
+type: Opaque
+stringData:
+  MONGO_URL: "mongodb://admin:changeme123@mongodb:27017"
+  AZURE_TENANT_ID: "your-tenant-id"
+  AZURE_CLIENT_ID: "your-client-id"
+  AZURE_SCOPE: "api://your-client-id/user_impersonation"
+  MONGO_INITDB_ROOT_USERNAME: "admin"
+  MONGO_INITDB_ROOT_PASSWORD: "changeme123"
+
+---
+# MongoDB StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb
+  namespace: mail-manager
+spec:
+  serviceName: mongodb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:7.0
+        ports:
+        - containerPort: 27017
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mail-manager-secrets
+              key: MONGO_INITDB_ROOT_USERNAME
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mail-manager-secrets
+              key: MONGO_INITDB_ROOT_PASSWORD
+        volumeMounts:
+        - name: mongodb-storage
+          mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: mongodb-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
+
+---
+# MongoDB Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+  namespace: mail-manager
+spec:
+  selector:
+    app: mongodb
+  ports:
+  - port: 27017
+    targetPort: 27017
+  clusterIP: None
+
+---
+# Backend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: mail-manager
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: your-registry/mail-manager-backend:latest
+        ports:
+        - containerPort: 8001
+        env:
+        - name: MONGO_URL
+          valueFrom:
+            secretKeyRef:
+              name: mail-manager-secrets
+              key: MONGO_URL
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: mail-manager-config
+              key: DB_NAME
+        - name: AZURE_TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              name: mail-manager-secrets
+              key: AZURE_TENANT_ID
+        - name: AZURE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: mail-manager-secrets
+              key: AZURE_CLIENT_ID
+        - name: AZURE_SCOPE
+          valueFrom:
+            secretKeyRef:
+              name: mail-manager-secrets
+              key: AZURE_SCOPE
+        - name: CORS_ORIGINS
+          value: "https://votre-domaine.com"
+        livenessProbe:
+          httpGet:
+            path: /api/stats
+            port: 8001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/stats
+            port: 8001
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+---
+# Backend Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: mail-manager
+spec:
+  selector:
+    app: backend
+  ports:
+  - port: 8001
+    targetPort: 8001
+
+---
+# Frontend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: mail-manager
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: your-registry/mail-manager-frontend:latest
+        ports:
+        - containerPort: 80
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+---
+# Frontend Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: mail-manager
+spec:
+  selector:
+    app: frontend
+  ports:
+  - port: 80
+    targetPort: 80
+
+---
+# Ingress (pour exposition externe avec HTTPS)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mail-manager-ingress
+  namespace: mail-manager
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - votre-domaine.com
+    - api.votre-domaine.com
+    secretName: mail-manager-tls
+  rules:
+  - host: votre-domaine.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 80
+  - host: api.votre-domaine.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: backend
+            port:
+              number: 8001
