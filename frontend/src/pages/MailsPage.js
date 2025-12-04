@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -12,6 +12,7 @@ import { API } from "../App";
 const MailsPage = ({ user }) => {
   const { type } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [mails, setMails] = useState([]);
   const [services, setServices] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -20,9 +21,15 @@ const MailsPage = ({ user }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check if there's a status filter in URL
+    const statusFromUrl = searchParams.get("status");
+    if (statusFromUrl) {
+      setSelectedStatus(statusFromUrl);
+    }
+    
     fetchMails();
     fetchServices();
-  }, [type]);
+  }, [type, searchParams]);
 
   const fetchMails = async () => {
     try {
