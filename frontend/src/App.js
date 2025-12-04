@@ -133,6 +133,7 @@ function AppContent() {
             <Route path="services" element={<ServicesPage user={user} />} />
             <Route path="correspondents" element={<CorrespondentsPage user={user} />} />
             <Route path="users" element={<UsersPage user={user} />} />
+            <Route path="user-roles" element={<UserRolesPage user={user} />} />
             <Route path="import" element={<ImportPage user={user} />} />
           </Route>
         </Routes>
