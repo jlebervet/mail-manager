@@ -90,8 +90,8 @@ const DashboardPage = ({ user }) => {
           const getNavigationPath = () => {
             if (index === 0) return "/messages/entrant";
             if (index === 1) return "/messages/sortant";
-            if (index === 2) return "/messages/entrant"; // En traitement
-            if (index === 3) return "/messages/entrant"; // Archives
+            if (index === 2) return "/messages/entrant?status=traitement"; // En traitement
+            if (index === 3) return "/messages/entrant?status=archive"; // Archives
             return "/";
           };
           
