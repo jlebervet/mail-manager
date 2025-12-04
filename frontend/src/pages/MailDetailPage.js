@@ -21,7 +21,6 @@ const MailDetailPage = ({ user }) => {
   const params = useParams();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
-  const barcodeInputRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [mail, setMail] = useState(null);
   
