@@ -17,7 +17,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
 import BarcodeScanner from "../components/BarcodeScanner";
 
-const MailDetailPage = ({ user }) => {
+const MessageDetailPage = ({ user }) => {
   const params = useParams();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -815,4 +815,4 @@ const MailDetailPage = ({ user }) => {
   );
 };
 
-export default MailDetailPage;
+export default MessageDetailPage;
