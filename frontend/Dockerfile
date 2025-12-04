@@ -1,36 +1,35 @@
-# Build stage
 FROM node:18-alpine AS build
 
 WORKDIR /app
 
-# Copy package files
+# Copier package.json
 COPY package.json ./
-COPY yarn.lock* ./
 
-# Install dependencies
-RUN yarn install --frozen-lockfile || yarn install
+# Installer avec NPM (plus stable que yarn)
+RUN npm install --legacy-peer-deps
 
-# Copy application code
+# Copier le reste
 COPY . .
 
-# Build the application
-RUN yarn build
+# Variables d'environnement
+ARG REACT_APP_BACKEND_URL
+ARG REACT_APP_AZURE_CLIENT_ID
+ARG REACT_APP_AZURE_TENANT_ID
+ARG REACT_APP_AZURE_REDIRECT_URI
+ARG REACT_APP_AZURE_SCOPE
 
-# Production stage
+ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
+ENV REACT_APP_AZURE_CLIENT_ID=$REACT_APP_AZURE_CLIENT_ID
+ENV REACT_APP_AZURE_TENANT_ID=$REACT_APP_AZURE_TENANT_ID
+ENV REACT_APP_AZURE_REDIRECT_URI=$REACT_APP_AZURE_REDIRECT_URI
+ENV REACT_APP_AZURE_SCOPE=$REACT_APP_AZURE_SCOPE
+
+# Build
+RUN npm run build
+
+# Production
 FROM nginx:alpine
-
-# Copy built files from build stage
 COPY --from=build /app/build /usr/share/nginx/html
-
-# Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Expose port
 EXPOSE 80
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1
-
-# Start nginx
 CMD ["nginx", "-g", "daemon off;"]
