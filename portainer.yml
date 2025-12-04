@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: mail-manager-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - mail-manager-network
+
+  backend:
+    image: python:3.11-slim
+    container_name: mail-manager-backend
+    restart: unless-stopped
+    working_dir: /app
+    environment:
+      - MONGO_URL=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017
+      - DB_NAME=mail_management_db
+      - CORS_ORIGINS=*
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID}
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+      - AZURE_SCOPE=${AZURE_SCOPE}
+    ports:
+      - "8888:8888"
+    depends_on:
+      - mongodb
+    networks:
+      - mail-manager-network
+    volumes:
+      - /home/VOTRE-USER/mail-manager/backend:/app
+    command: bash -c "apt-get update && apt-get install -y gcc && pip install -r requirements.txt && uvicorn server:app --host 0.0.0.0 --port 8888 --reload"
+
+  frontend:
+    image: node:18-alpine
+    container_name: mail-manager-frontend
+    restart: unless-stopped
+    working_dir: /app
+    environment:
+      - HOST=0.0.0.0
+      - PORT=3333
+      - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL}
+      - REACT_APP_AZURE_CLIENT_ID=${REACT_APP_AZURE_CLIENT_ID}
+      - REACT_APP_AZURE_TENANT_ID=${REACT_APP_AZURE_TENANT_ID}
+      - REACT_APP_AZURE_REDIRECT_URI=${REACT_APP_AZURE_REDIRECT_URI}
+      - REACT_APP_AZURE_SCOPE=${REACT_APP_AZURE_SCOPE}
+    ports:
+      - "3333:3333"
+    depends_on:
+      - backend
+    networks:
+      - mail-manager-network
+    volumes:
+      - /home/VOTRE-USER/mail-manager/frontend:/app
+    command: sh -c "npm install --legacy-peer-deps && npm start"
+
+networks:
+  mail-manager-network:
+
+volumes:
+  mongodb_data:
