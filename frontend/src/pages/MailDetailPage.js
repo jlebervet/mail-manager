@@ -403,9 +403,7 @@ const MailDetailPage = ({ user }) => {
                     <Label>Type de message *</Label>
                     <Select value={messageType} onValueChange={setMessageType}>
                       <SelectTrigger data-testid="message-type-select">
-                        <SelectValue>
-                          {messageTypeLabels[messageType]}
-                        </SelectValue>
+                        <span>{messageTypeLabels[messageType]}</span>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="message">📧 Message</SelectItem>
