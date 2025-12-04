@@ -101,3 +101,90 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Application de gestion de messages avec import CSV, scan de code-barres, et système d'archivage"
+
+backend:
+  - task: "Import CSV - Endpoint API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Endpoint POST /api/import/csv créé et testé avec succès via curl. 3 correspondants et 3 messages importés sans erreur."
+
+frontend:
+  - task: "Import CSV - Page frontend"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/ImportPage.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Page d'import complète avec upload de fichier, modèle CSV téléchargeable, gestion des erreurs et affichage des résultats. Lien ajouté dans la sidebar (visible admin uniquement)."
+
+  - task: "Import CSV - Navigation"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js, /app/frontend/src/components/DashboardLayout.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Route /import ajoutée dans App.js. Lien 'Import CSV' ajouté dans DashboardLayout, visible uniquement pour les administrateurs."
+
+  - task: "Affichage des émojis dans Type de message"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/MessageDetailPage.js"
+    stuck_count: 1
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "previous"
+        comment: "Les émojis ne s'affichaient pas correctement dans le dropdown. Seul 'Message' s'affichait deux fois."
+      - working: true
+        agent: "main"
+        comment: "Correction appliquée : utilisation de <span> dans SelectTrigger pour afficher les labels avec émojis. Emoji Email changé de ✉️ à 📨 puis à 💌 pour meilleure compatibilité. Tous les émojis s'affichent maintenant dans le dropdown."
+
+  - task: "Renommage Courrier -> Message"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/MessagesPage.js, /app/frontend/src/pages/MessageDetailPage.js, /app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Fichiers MailsPage.js et MailDetailPage.js renommés en MessagesPage.js et MessageDetailPage.js. Imports et exports mis à jour dans App.js. Application fonctionne correctement après le renommage."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: true
+
+test_plan:
+  current_focus:
+    - "Import CSV - Page frontend"
+    - "Import CSV - Navigation"
+    - "Affichage des émojis dans Type de message"
+    - "Import CSV - Endpoint API"
+  stuck_tasks: []
+  test_all: true
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Toutes les tâches prioritaires ont été complétées : 1) Import CSV fonctionnel (backend + frontend), 2) Émojis corrigés dans le dropdown Type de message, 3) Fichiers renommés pour cohérence. L'application doit être testée end-to-end pour vérifier que toutes les fonctionnalités existantes fonctionnent toujours et que les nouvelles fonctionnalités sont opérationnelles. Credentials : admin@mairie.fr / admin123"
