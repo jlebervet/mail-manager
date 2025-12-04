@@ -9,7 +9,7 @@ import { Badge } from "../components/ui/badge";
 import { Plus, Search, Filter } from "lucide-react";
 import { API } from "../App";
 
-const MailsPage = ({ user }) => {
+const MessagesPage = ({ user }) => {
   const { type } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -212,4 +212,4 @@ const MailsPage = ({ user }) => {
   );
 };
 
-export default MailsPage;
+export default MessagesPage;
