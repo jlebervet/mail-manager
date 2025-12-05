@@ -1,0 +1,123 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # Traefik - Reverse Proxy avec HTTPS automatique
+  # ============================================
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      # Dashboard Traefik
+      - "--api.insecure=true"
+      
+      # Provider Docker
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      
+      # Entrypoints HTTP et HTTPS
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      
+      # Redirection HTTP -> HTTPS
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      
+      # Let's Encrypt automatique
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-certificates:/letsencrypt
+    networks:
+      - mail-manager-network
+
+  # ============================================
+  # MongoDB
+  # ============================================
+  mongodb:
+    image: mongo:7.0
+    container_name: mail-manager-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - mail-manager-network
+
+  # ============================================
+  # Backend API (FastAPI)
+  # ============================================
+  backend:
+    image: python:3.11-slim
+    container_name: mail-manager-backend
+    restart: unless-stopped
+    working_dir: /app
+    environment:
+      - MONGO_URL=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017
+      - DB_NAME=mail_management_db
+      - CORS_ORIGINS=https://${DOMAIN_NAME}
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID}
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+      - AZURE_SCOPE=${AZURE_SCOPE}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`${DOMAIN_NAME}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.backend.loadbalancer.server.port=8888"
+    depends_on:
+      - mongodb
+    networks:
+      - mail-manager-network
+    volumes:
+      - /root/mail-manager/backend:/app
+    command: bash -c "apt-get update && apt-get install -y gcc && pip install -r requirements.txt && uvicorn server:app --host 0.0.0.0 --port 8888"
+
+  # ============================================
+  # Frontend (React)
+  # ============================================
+  frontend:
+    image: node:20-alpine
+    container_name: mail-manager-frontend
+    restart: unless-stopped
+    working_dir: /app
+    environment:
+      - HOST=0.0.0.0
+      - PORT=3333
+      - REACT_APP_BACKEND_URL=https://${DOMAIN_NAME}
+      - REACT_APP_AZURE_CLIENT_ID=${REACT_APP_AZURE_CLIENT_ID}
+      - REACT_APP_AZURE_TENANT_ID=${REACT_APP_AZURE_TENANT_ID}
+      - REACT_APP_AZURE_REDIRECT_URI=https://${DOMAIN_NAME}
+      - REACT_APP_AZURE_SCOPE=${REACT_APP_AZURE_SCOPE}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN_NAME}`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3333"
+    depends_on:
+      - backend
+    networks:
+      - mail-manager-network
+    volumes:
+      - /root/mail-manager/frontend:/app
+    command: sh -c "rm -rf node_modules && npm install --force && npm start"
+
+networks:
+  mail-manager-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
+  traefik-certificates:
+    driver: local
