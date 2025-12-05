@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import axios from "axios";
-import { PublicClientApplication, EventType } from "@azure/msal-browser";
-import { MsalProvider, AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from "@azure/msal-react";
-import { msalConfig, loginRequest, apiConfig } from "./authConfig";
+import { PublicClientApplication } from "@azure/msal-browser";
+import { MsalProvider, useIsAuthenticated, useMsal } from "@azure/msal-react";
+import { msalConfig, loginRequest } from "./authConfig";
 import LoginPage from "./pages/LoginPage";
 import DashboardLayout from "./components/DashboardLayout";
 import DashboardPage from "./pages/DashboardPage";
@@ -20,79 +20,61 @@ import { Toaster } from "./components/ui/sonner";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Create MSAL instance
 const msalInstance = new PublicClientApplication(msalConfig);
 
-// Account selection logic (if you have multiple accounts)
-const accounts = msalInstance.getAllAccounts();
-if (accounts.length > 0) {
-  msalInstance.setActiveAccount(accounts[0]);
-}
-
-msalInstance.addEventCallback((event) => {
-  if (event.eventType === EventType.LOGIN_SUCCESS && event.payload.account) {
-    const account = event.payload.account;
-    msalInstance.setActiveAccount(account);
-  }
-});
-
-// Axios interceptor to add Azure AD auth token
 axios.interceptors.request.use(
   async (config) => {
-    const account = msalInstance.getActiveAccount();
-    if (account) {
-      try {
+    try {
+      const accounts = msalInstance.getAllAccounts();
+      if (accounts.length > 0) {
         const response = await msalInstance.acquireTokenSilent({
-          account,
+          account: accounts[0],
           ...loginRequest,
         });
         config.headers.Authorization = `Bearer ${response.accessToken}`;
-      } catch (error) {
-        console.error("Token acquisition failed:", error);
       }
+    } catch (error) {
+      console.error("Token error:", error);
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-function AppContent() {
+function MainApp() {
+  const isAuthenticated = useIsAuthenticated();
   const { instance, accounts } = useMsal();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (accounts && accounts.length > 0) {
+    const fetchUser = async () => {
+      if (isAuthenticated && accounts.length > 0) {
         try {
           const response = await instance.acquireTokenSilent({
             account: accounts[0],
             ...loginRequest,
           });
-
-          // Fetch user data from backend
+          
           const userResponse = await axios.get(`${API}/auth/me/azure`, {
-            headers: {
-              Authorization: `Bearer ${response.accessToken}`,
-            },
+            headers: { Authorization: `Bearer ${response.accessToken}` }
           });
-
+          
           setUser(userResponse.data);
         } catch (error) {
-          console.error("Error fetching user data:", error);
+          console.error("Error fetching user:", error);
         }
       }
       setLoading(false);
     };
 
-    fetchUserData();
-  }, [accounts, instance]);
+    fetchUser();
+  }, [isAuthenticated, accounts, instance]);
 
   const handleLogout = () => {
     instance.logoutRedirect({
-      postLogoutRedirectUri: "/",
+      postLogoutRedirectUri: "/login",
     });
-    setUser(null);
   };
 
   if (loading) {
@@ -103,8 +85,6 @@ function AppContent() {
     );
   }
 
-  const isAuthenticated = accounts && accounts.length > 0;
-
   return (
     <div className="App">
       <Toaster />
@@ -113,17 +93,21 @@ function AppContent() {
           <Route
             path="/login"
             element={
-              <UnauthenticatedTemplate>
+              isAuthenticated ? (
+                <Navigate to="/" replace />
+              ) : (
                 <LoginPage />
-              </UnauthenticatedTemplate>
+              )
             }
           />
           <Route
             path="/"
             element={
-              <AuthenticatedTemplate>
+              isAuthenticated ? (
                 <DashboardLayout user={user} onLogout={handleLogout} />
-              </AuthenticatedTemplate>
+              ) : (
+                <Navigate to="/login" replace />
+              )
             }
           >
             <Route index element={<DashboardPage user={user} />} />
@@ -138,23 +122,38 @@ function AppContent() {
           </Route>
         </Routes>
       </BrowserRouter>
-
-      {/* Redirect to login if not authenticated */}
-      <UnauthenticatedTemplate>
-        <BrowserRouter>
-          <Routes>
-            <Route path="*" element={<Navigate to="/login" replace />} />
-          </Routes>
-        </BrowserRouter>
-      </UnauthenticatedTemplate>
     </div>
   );
 }
 
 function App() {
+  const [msalInitialized, setMsalInitialized] = useState(false);
+
+  useEffect(() => {
+    msalInstance.initialize().then(() => {
+      msalInstance.handleRedirectPromise().then((response) => {
+        if (response) {
+          msalInstance.setActiveAccount(response.account);
+        }
+        setMsalInitialized(true);
+      }).catch((error) => {
+        console.error("Redirect error:", error);
+        setMsalInitialized(true);
+      });
+    });
+  }, []);
+
+  if (!msalInitialized) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Initialisation...</div>
+      </div>
+    );
+  }
+
   return (
     <MsalProvider instance={msalInstance}>
-      <AppContent />
+      <MainApp />
     </MsalProvider>
   );
 }
