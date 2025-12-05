@@ -1,109 +1,131 @@
-# 📬 Mail Manager - Application de Gestion de Messages
+# 📬 Mail Manager - Gestion de Messages
 
-Application full-stack professionnelle pour la gestion de courriers, emails, colis et dépôts avec authentification Microsoft Azure AD.
+Application full-stack de gestion de courriers, emails, colis et dépôts avec authentification Microsoft Azure AD.
 
-![React](https://img.shields.io/badge/React-18.x-61DAFB?logo=react)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.110-009688?logo=fastapi)
 ![MongoDB](https://img.shields.io/badge/MongoDB-7.0-47A248?logo=mongodb)
-![Azure AD](https://img.shields.io/badge/Azure%20AD-OAuth%202.0-0078D4?logo=microsoft)
-![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)
+![Azure AD](https://img.shields.io/badge/Azure%20AD-OAuth-0078D4?logo=microsoft)
+
+---
+
+## 🚀 Déploiement Rapide
+
+### Avec Portainer (Recommandé)
+
+```bash
+# 1. Sur serveur
+git clone <votre-repo> mail-manager
+
+# 2. Portainer
+Stacks > Add stack > Collez portainer-production.yml
+
+# 3. Init
+Console backend > python scripts/init_data.py
+
+# 4. Connexion Microsoft + Set admin
+python scripts/set_first_admin.py
+```
+
+**Temps total : 10 minutes** ⏱️
+
+[Guide Complet →](./DEPLOIEMENT_FINAL.md)
 
 ---
 
 ## ✨ Fonctionnalités
 
-### 🔐 Authentification & Sécurité
-- ✅ Authentification Microsoft Azure AD (OAuth 2.0)
-- ✅ Synchronisation automatique des utilisateurs
-- ✅ Gestion des rôles (Admin / Utilisateur)
-- ✅ Tokens JWT sécurisés avec rafraîchissement automatique
-
-### 📧 Gestion des Messages
-- ✅ Messages entrants et sortants
-- ✅ Types multiples : Message, Email, Dépôt main propre, Colis
-- ✅ Workflow complet : Reçu → Traitement → Traité → Archivé
-- ✅ Système de réponse avec suivi des échanges
-- ✅ Recommandés avec numéro de suivi
-- ✅ Scan de code-barres via smartphone/tablette
-- ✅ Pièces jointes (drag & drop)
-
-### 🏢 Gestion Organisationnelle
-- ✅ Services et sous-services
-- ✅ Gestion des correspondants avec autocomplétion
-- ✅ Archivage (soft delete) des services
-- ✅ Import CSV massif (admin)
-
-### 📊 Dashboard & Statistiques
-- ✅ Tableau de bord avec statistiques en temps réel
-- ✅ Filtres avancés (statut, service, type)
-- ✅ Recherche multicritères
-- ✅ Navigation intuitive
-
-### 👥 Administration
-- ✅ Gestion des utilisateurs
-- ✅ Attribution des rôles via interface
-- ✅ Import CSV pour migration de données
-- ✅ Logs et historique complets
+- 🔐 Authentification Microsoft Azure AD
+- 📧 Gestion messages (entrants/sortants)
+- 📦 Types : Message, Email, Colis, Dépôt
+- 📱 Scan code-barres (recommandés)
+- 👥 Gestion correspondants
+- 🏢 Services et sous-services
+- 📥 Import CSV massif
+- 🛡️ Gestion des rôles utilisateurs
+- 📊 Dashboard et statistiques
 
 ---
 
-## 🚀 Déploiement Rapide avec Docker
+## 🏗️ Stack Technique
 
-### Prérequis
-- Docker 20.10+
-- Docker Compose 2.0+
-
-### Installation en 3 Minutes
-
-```bash
-# 1. Cloner le dépôt
-git clone <votre-repo>
-cd mail-manager
-
-# 2. Configuration automatique
-./setup.sh
-
-# 3. Lancer l'application
-docker-compose up -d
-
-# 4. Initialiser les données
-docker-compose exec backend python scripts/init_data.py
-docker-compose exec backend python scripts/set_first_admin.py
-```
-
-**C'est tout ! 🎉**
-
-Accédez à :
-- **Frontend** : http://localhost:3333
-- **API** : http://localhost:8888
-- **API Docs** : http://localhost:8888/docs
+- **Frontend** : React 18 + Shadcn UI + Tailwind + MSAL
+- **Backend** : FastAPI + Azure Auth + Motor
+- **Database** : MongoDB 7.0
+- **Infrastructure** : Docker + Traefik + Let's Encrypt
 
 ---
 
-## 📖 Documentation Complète
+## 📖 Documentation
 
-- **[Guide de Déploiement](./README_DEPLOYMENT.md)** - Instructions détaillées
-- **[Configuration Azure AD](./README_DEPLOYMENT.md#configuration-azure-ad)** - Setup Azure AD
-- **[Variables d'Environnement](./.env.example)** - Toutes les variables
-- **[Déploiement Kubernetes](./kubernetes.yml)** - Pour clusters K8s
+- **[Déploiement Final](./DEPLOIEMENT_FINAL.md)** - Guide complet
+- **[Premier Admin](./PREMIER_ADMIN.md)** - Définir l'administrateur
+- **[Portainer](./PORTAINER_GUIDE.md)** - Guide visuel Portainer
+- **[Variables](/.env.example)** - Configuration complète
 
 ---
 
-## 🏗️ Architecture
+## 🔧 Configuration
+
+### Ports
+
+- HTTP : 8080
+- HTTPS : 8443
+- Traefik Dashboard : 8081
+
+### Réseau Docker
+
+- Subnet : 172.21.0.0/16
+- Gateway : 172.21.0.1
+
+### Fichiers Stack
+
+- `portainer-production.yml` - Stack complète avec Traefik
+- `PORTAINER.yml` - Version simplifiée
+- `docker-compose.yml` - Pour CLI locale
+
+---
+
+## 👤 Premier Admin
+
+**Après déploiement :**
+
+1. Connectez-vous avec Microsoft (JLeBervet)
+2. Console backend : `python scripts/set_first_admin.py`
+3. Reconnectez-vous
+4. ✅ Accès admin !
+
+[Guide Détaillé →](./PREMIER_ADMIN.md)
+
+---
+
+## 📦 Structure
 
 ```
-Client (Navigateur) → Frontend (React + MSAL) → Backend (FastAPI + Azure Auth) → MongoDB
+mail-manager/
+├── backend/              # FastAPI
+├── frontend/             # React
+├── portainer-production.yml   # Stack Portainer
+├── DEPLOIEMENT_FINAL.md       # Guide déploiement
+└── PREMIER_ADMIN.md           # Guide admin
 ```
 
-Stack : React 18 + FastAPI + MongoDB + Azure AD
+---
+
+## 🔐 Sécurité
+
+- HTTPS automatique (Let's Encrypt)
+- Authentification Azure AD OAuth 2.0
+- Tokens JWT sécurisés
+- RBAC (Admin/User)
+- CORS configuré
 
 ---
 
 ## 📞 Support
 
-- **Documentation** : [README_DEPLOYMENT.md](./README_DEPLOYMENT.md)
-- **Issues** : GitHub Issues
+Consultez la documentation complète dans les fichiers .md
 
 ---
 
-**🚀 Prêt pour la Production !**
+**Prêt pour Production ! 🚀**
