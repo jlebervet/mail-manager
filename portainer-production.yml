@@ -17,9 +17,9 @@ services:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       
-      # Entrypoints HTTP et HTTPS (ports personnalisés)
-      - "--entrypoints.web.address=:8080"
-      - "--entrypoints.websecure.address=:8443"
+      # Entrypoints HTTP et HTTPS (ports INTERNES du conteneur)
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
       
       # Redirection HTTP -> HTTPS
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
@@ -30,9 +30,9 @@ services:
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
     ports:
-      - "8080:8080"   # HTTP
-      - "8443:8443"   # HTTPS
-      - "8081:8080"   # Dashboard Traefik
+      - "8080:80"     # Port hôte 8080 -> conteneur 80 (HTTP)
+      - "8443:443"    # Port hôte 8443 -> conteneur 443 (HTTPS)
+      - "8081:8080"   # Port hôte 8081 -> conteneur 8080 (Dashboard)
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik-certificates:/letsencrypt
