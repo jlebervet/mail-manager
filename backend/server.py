@@ -882,3 +882,12 @@ async def load_azure_config():
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+# Wrapper Azure AD pour les routes
+async def azure_user_dependency(azure_user: AzureUser = Security(azure_scheme)) -> dict:
+    """Wrapper to get user dict from Azure AD"""
+    return await get_current_user_azure(azure_user)
+
+async def azure_admin_dependency(current_user: dict = Depends(azure_user_dependency)) -> dict:
+    """Require admin with Azure AD"""
+    return await require_admin_azure(current_user)
