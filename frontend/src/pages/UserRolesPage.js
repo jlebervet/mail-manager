@@ -216,6 +216,30 @@ const UserRolesPage = ({ user }) => {
                     </SelectContent>
                   </Select>
 
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-600">Service:</span>
+                    <Select
+                      value={u.service_id || "none"}
+                      onValueChange={(value) =>
+                        handleServiceChange(u.id, u.name, value === "none" ? null : value)
+                      }
+                    >
+                      <SelectTrigger className="w-48">
+                        <SelectValue>
+                          {getServiceName(u.service_id)}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Aucun service</SelectItem>
+                        {services.map((service) => (
+                          <SelectItem key={service.id} value={service.id}>
+                            {service.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <Button
                     variant="outline"
                     size="sm"
