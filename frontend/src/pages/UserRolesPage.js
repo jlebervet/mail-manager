@@ -106,6 +106,19 @@ const UserRolesPage = ({ user }) => {
     }
   };
 
+  const handleServiceChange = async (userId, userName, serviceId) => {
+    try {
+      await axios.put(`${API}/users/${userId}/service`, {
+        service_id: serviceId || null
+      });
+      toast.success(`Service mis à jour pour ${userName}`);
+      fetchUsers();
+    } catch (error) {
+      console.error("Error updating service:", error);
+      toast.error("Erreur lors de la mise à jour du service");
+    }
+  };
+
   const getRoleBadge = (role) => {
     if (role === "admin") {
       return (
