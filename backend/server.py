@@ -22,6 +22,10 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+# JWT Secret pour l'authentification legacy (pour compatibilité)
+JWT_SECRET = os.environ.get('JWT_SECRET', 'fallback_secret_key_2025')
+JWT_ALGORITHM = "HS256"
+
 # Create the main app
 app = FastAPI(
     swagger_ui_oauth2_redirect_url="/oauth2-redirect",
