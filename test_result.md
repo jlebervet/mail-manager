@@ -242,8 +242,10 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus: []
-  stuck_tasks: []
+  current_focus:
+    - "Limitation des droits par service (permissions par service)"
+  stuck_tasks:
+    - "Limitation des droits par service (permissions par service)"
   test_all: false
   test_priority: "high_first"
 
@@ -254,3 +256,5 @@ agent_communication:
     message: "Tests end-to-end complétés avec succès. Toutes les fonctionnalités testées sont opérationnelles : Import CSV (upload, traitement, affichage résultats), Types de messages avec émojis (4 options affichées correctement), Scan code-barres pour recommandé (UI fonctionnelle), Navigation complète, Création/gestion de messages, Fonction répondre. Aucune erreur critique détectée. Application prête pour utilisation."
   - agent: "testing"
     message: "Test de la fonctionnalité de modification de mot de passe complété avec succès. Tous les scénarios testés : (1) Affichage du bouton 'Mot de passe' pour tous les utilisateurs, (2) Ouverture du dialogue avec tous les champs requis, (3) Validation des mots de passe (correspondance et longueur minimum), (4) Modification réussie du mot de passe, (5) Connexion avec le nouveau mot de passe, (6) Réinitialisation du mot de passe. Fonctionnalité 100% opérationnelle. Note: Pour les tests, la configuration REACT_APP_BACKEND_URL a été temporairement modifiée pour pointer vers localhost:8888, puis restaurée à la valeur de production."
+  - agent: "testing"
+    message: "CRITIQUE - Impossible de tester la fonctionnalité de limitation des droits par service. Problème d'infrastructure : (1) localhost:3333 a des erreurs CORS car le frontend appelle le backend de production, (2) L'URL de production retourne 502 Bad Gateway. L'implémentation backend semble correcte (filtrage par service_id dans /api/mails et /api/stats). Le frontend a les UI nécessaires (dropdown Service dans UserRolesPage, affichage dans MessagesPage). BESOIN: Environnement de test fonctionnel ou configuration locale pour tester. RECOMMANDATION: Vérifier la configuration nginx/ingress pour l'URL de production ou configurer un environnement de test local avec backend accessible."
