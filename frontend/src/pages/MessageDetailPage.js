@@ -550,7 +550,26 @@ const MessageDetailPage = ({ user }) => {
                           onValueChange={setCorrespondentSearch}
                         />
                         <CommandList>
-                          <CommandEmpty>Aucun correspondant trouvé.</CommandEmpty>
+                          <CommandEmpty>
+                            <div className="p-4 text-center space-y-3">
+                              <p className="text-sm text-slate-500">Aucun correspondant trouvé.</p>
+                              <Button
+                                onClick={() => {
+                                  setNewCorrespondent({
+                                    ...newCorrespondent,
+                                    name: correspondentSearch
+                                  });
+                                  setShowNewCorrespondentDialog(true);
+                                  setOpenCorrespondent(false);
+                                }}
+                                className="w-full bg-blue-600 hover:bg-blue-700"
+                                size="sm"
+                              >
+                                <UserPlus className="mr-2 h-4 w-4" />
+                                Créer "{correspondentSearch}"
+                              </Button>
+                            </div>
+                          </CommandEmpty>
                           <CommandGroup>
                             {correspondents.map((correspondent) => (
                               <CommandItem
