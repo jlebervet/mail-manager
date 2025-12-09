@@ -240,6 +240,37 @@ const MessageDetailPage = ({ user }) => {
     toast.success(`Code-barres scanné : ${scannedCode}`);
   };
 
+  const handleCreateNewCorrespondent = async () => {
+    if (!newCorrespondent.name) {
+      toast.error("Le nom est obligatoire");
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${API}/correspondents`, newCorrespondent);
+      toast.success("Correspondant créé avec succès");
+      
+      // Ajouter à la liste
+      setCorrespondents(prev => [...prev, response.data]);
+      
+      // Sélectionner automatiquement le nouveau correspondant
+      setSelectedCorrespondent(response.data);
+      
+      // Fermer la modale et réinitialiser le formulaire
+      setShowNewCorrespondentDialog(false);
+      setNewCorrespondent({
+        name: "",
+        email: "",
+        phone: "",
+        organization: "",
+        address: ""
+      });
+    } catch (error) {
+      console.error("Error creating correspondent:", error);
+      toast.error("Erreur lors de la création du correspondant");
+    }
+  };
+
   const handleReply = () => {
     const parentMailData = {
       parent_mail_id: mail.id,
