@@ -12,6 +12,7 @@ from datetime import datetime, timezone, timedelta
 import jwt
 import base64
 from fastapi_azure_auth import SingleTenantAzureAuthorizationCodeBearer
+from fastapi_azure_auth.user import User as AzureUser
 from azure_config import settings
 from azure_auth import get_current_user_azure, require_admin_azure
 
