@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
-import { Home, Mail, MailOpen, Building2, Users, UserCog, LogOut, Settings, Upload, Shield } from "lucide-react";
+import { Home, Mail, MailOpen, Building2, Users, UserCog, LogOut, Settings, Upload, Shield, BarChart3 } from "lucide-react";
 
 const DashboardLayout = ({ user, onLogout }) => {
   const navigate = useNavigate();
@@ -15,6 +15,7 @@ const DashboardLayout = ({ user, onLogout }) => {
 
   const menuItems = [
     { path: "/", label: "Tableau de bord", icon: Home, exact: true },
+    { path: "/stats", label: "Statistiques avancées", icon: BarChart3 },
     { path: "/messages/entrant", label: "Message entrant", icon: Mail },
     { path: "/messages/sortant", label: "Message sortant", icon: MailOpen },
     { path: "/services", label: "Services", icon: Building2 },
