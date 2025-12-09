@@ -208,6 +208,18 @@ frontend:
         agent: "testing"
         comment: "Flux complet de création de message testé avec succès. Tous les champs fonctionnent (type, sujet, contenu, correspondant, service). Message créé avec succès et visible dans la liste. Fonction 'Répondre' fonctionne correctement avec préfixe 'Re:' et pré-remplissage des informations. Filtres de recherche et statut opérationnels."
 
+  - task: "Modification de mot de passe utilisateur"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/UserRolesPage.js, /app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Fonctionnalité de modification de mot de passe testée avec succès. Tous les points vérifiés : (1) Bouton 'Mot de passe' visible pour chaque utilisateur, (2) Dialogue s'ouvre correctement avec tous les champs requis (nouveau mot de passe, confirmer mot de passe, boutons Mettre à jour et Annuler), (3) Validation fonctionne - message d'erreur affiché pour mots de passe non correspondants, (4) Validation longueur minimum 6 caractères, (5) Message de succès affiché après modification, (6) Nouveau mot de passe fonctionne pour la connexion, (7) Mot de passe peut être réinitialisé. Interface claire et intuitive. Backend endpoint PUT /api/users/{user_id}/password fonctionne correctement."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
