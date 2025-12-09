@@ -282,6 +282,74 @@ const UserRolesPage = ({ user }) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Password Change Dialog */}
+      <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5" />
+              Changer le mot de passe
+            </DialogTitle>
+            <DialogDescription>
+              Modifier le mot de passe de <strong>{passwordData.userName}</strong>
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">Nouveau mot de passe</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                placeholder="Minimum 6 caractères"
+                value={passwordData.newPassword}
+                onChange={(e) =>
+                  setPasswordData({ ...passwordData, newPassword: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Retaper le mot de passe"
+                value={passwordData.confirmPassword}
+                onChange={(e) =>
+                  setPasswordData({ ...passwordData, confirmPassword: e.target.value })
+                }
+              />
+            </div>
+
+            {passwordData.newPassword && passwordData.confirmPassword && 
+             passwordData.newPassword !== passwordData.confirmPassword && (
+              <p className="text-sm text-red-600">
+                ⚠️ Les mots de passe ne correspondent pas
+              </p>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowPasswordDialog(false);
+                setPasswordData({ userId: "", userName: "", newPassword: "", confirmPassword: "" });
+              }}
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={handlePasswordChange}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Mettre à jour
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
