@@ -189,6 +189,7 @@ def create_token(user_data: dict) -> str:
         "email": user_data["email"],
         "name": user_data["name"],
         "role": user_data["role"],
+        "service_id": user_data.get("service_id"),
         "exp": datetime.now(timezone.utc) + timedelta(hours=24)
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
