@@ -138,6 +138,12 @@ const UserRolesPage = ({ user }) => {
 
   const isCurrentUser = (userId) => userId === user?.id;
 
+  const getServiceName = (serviceId) => {
+    if (!serviceId) return "Aucun service";
+    const service = services.find(s => s.id === serviceId);
+    return service ? service.name : "Service inconnu";
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
