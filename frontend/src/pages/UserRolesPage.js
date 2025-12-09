@@ -2,10 +2,13 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Badge } from "../components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "../components/ui/dialog";
 import { toast } from "sonner";
-import { Shield, User, UserCog, AlertCircle } from "lucide-react";
+import { Shield, User, UserCog, AlertCircle, Key } from "lucide-react";
 import { API } from "../App";
 import {
   AlertDialog,
@@ -24,6 +27,8 @@ const UserRolesPage = ({ user }) => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [newRole, setNewRole] = useState("");
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [passwordData, setPasswordData] = useState({ userId: "", userName: "", newPassword: "", confirmPassword: "" });
 
   useEffect(() => {
     fetchUsers();
