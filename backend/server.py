@@ -709,16 +709,27 @@ async def delete_user(user_id: str, admin_user: dict = Depends(require_admin)):
 
 @api_router.get("/stats")
 async def get_stats(current_user: dict = Depends(get_current_user)):
-    """Get dashboard statistics"""
-    total_mails = await db.mails.count_documents({})
-    entrant_mails = await db.mails.count_documents({"type": "entrant"})
-    sortant_mails = await db.mails.count_documents({"type": "sortant"})
+    """Get dashboard statistics - filtered by user service if not admin"""
+    query = {}
+    
+    # If user is not admin and has a service_id, filter by their service
+    if current_user.get("role") != "admin" and current_user.get("service_id"):
+        query["service_id"] = current_user.get("service_id")
+    
+    total_mails = await db.mails.count_documents(query)
+    
+    entrant_query = {**query, "type": "entrant"}
+    sortant_query = {**query, "type": "sortant"}
+    entrant_mails = await db.mails.count_documents(entrant_query)
+    sortant_mails = await db.mails.count_documents(sortant_query)
     
     status_counts = {}
     for status in ["recu", "traitement", "traite", "archive"]:
-        status_counts[status] = await db.mails.count_documents({"status": status})
+        status_query = {**query, "status": status}
+        status_counts[status] = await db.mails.count_documents(status_query)
     
-    assigned_to_me = await db.mails.count_documents({"assigned_to_id": current_user['sub']})
+    assigned_query = {**query, "assigned_to_id": current_user['sub']}
+    assigned_to_me = await db.mails.count_documents(assigned_query)
     
     return {
         "total_mails": total_mails,
