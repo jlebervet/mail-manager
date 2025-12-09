@@ -529,50 +529,139 @@ const MessageDetailPage = ({ user }) => {
 
               <div>
                 <Label>Correspondant *</Label>
-                <Popover open={openCorrespondent} onOpenChange={setOpenCorrespondent}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      data-testid="correspondent-select"
-                      variant="outline"
-                      role="combobox"
-                      className="w-full justify-between"
-                      disabled={!isNew}
-                    >
-                      {selectedCorrespondent ? selectedCorrespondent.name : "Sélectionner un correspondant..."}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0">
-                    <Command>
-                      <CommandInput 
-                        placeholder="Rechercher un correspondant..."
-                        value={correspondentSearch}
-                        onValueChange={setCorrespondentSearch}
-                      />
-                      <CommandList>
-                        <CommandEmpty>Aucun correspondant trouvé.</CommandEmpty>
-                        <CommandGroup>
-                          {correspondents.map((correspondent) => (
-                            <CommandItem
-                              key={correspondent.id}
-                              value={correspondent.name}
-                              onSelect={() => {
-                                setSelectedCorrespondent(correspondent);
-                                setOpenCorrespondent(false);
-                              }}
-                            >
-                              <div>
-                                <div className="font-medium">{correspondent.name}</div>
-                                {correspondent.organization && (
-                                  <div className="text-xs text-slate-500">{correspondent.organization}</div>
-                                )}
-                              </div>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                <div className="flex gap-2">
+                  <Popover open={openCorrespondent} onOpenChange={setOpenCorrespondent}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        data-testid="correspondent-select"
+                        variant="outline"
+                        role="combobox"
+                        className="flex-1 justify-between"
+                        disabled={!isNew}
+                      >
+                        {selectedCorrespondent ? selectedCorrespondent.name : "Sélectionner un correspondant..."}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput 
+                          placeholder="Rechercher un correspondant..."
+                          value={correspondentSearch}
+                          onValueChange={setCorrespondentSearch}
+                        />
+                        <CommandList>
+                          <CommandEmpty>Aucun correspondant trouvé.</CommandEmpty>
+                          <CommandGroup>
+                            {correspondents.map((correspondent) => (
+                              <CommandItem
+                                key={correspondent.id}
+                                value={correspondent.name}
+                                onSelect={() => {
+                                  setSelectedCorrespondent(correspondent);
+                                  setOpenCorrespondent(false);
+                                }}
+                              >
+                                <div>
+                                  <div className="font-medium">{correspondent.name}</div>
+                                  {correspondent.organization && (
+                                    <div className="text-xs text-slate-500">{correspondent.organization}</div>
+                                  )}
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  
+                  <Dialog open={showNewCorrespondentDialog} onOpenChange={setShowNewCorrespondentDialog}>
+                    <DialogTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        disabled={!isNew}
+                        data-testid="new-correspondent-button"
+                        title="Créer un nouveau correspondant"
+                      >
+                        <UserPlus className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Nouveau Correspondant</DialogTitle>
+                        <DialogDescription>
+                          Créez un nouveau correspondant pour l'associer à ce message
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="new-name">Nom *</Label>
+                          <Input
+                            id="new-name"
+                            value={newCorrespondent.name}
+                            onChange={(e) => setNewCorrespondent({...newCorrespondent, name: e.target.value})}
+                            placeholder="Nom complet"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="new-email">Email</Label>
+                          <Input
+                            id="new-email"
+                            type="email"
+                            value={newCorrespondent.email}
+                            onChange={(e) => setNewCorrespondent({...newCorrespondent, email: e.target.value})}
+                            placeholder="email@exemple.com"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="new-phone">Téléphone</Label>
+                          <Input
+                            id="new-phone"
+                            value={newCorrespondent.phone}
+                            onChange={(e) => setNewCorrespondent({...newCorrespondent, phone: e.target.value})}
+                            placeholder="01 23 45 67 89"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="new-organization">Organisation</Label>
+                          <Input
+                            id="new-organization"
+                            value={newCorrespondent.organization}
+                            onChange={(e) => setNewCorrespondent({...newCorrespondent, organization: e.target.value})}
+                            placeholder="Nom de l'organisation"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="new-address">Adresse</Label>
+                          <Textarea
+                            id="new-address"
+                            value={newCorrespondent.address}
+                            onChange={(e) => setNewCorrespondent({...newCorrespondent, address: e.target.value})}
+                            placeholder="Adresse postale complète"
+                            rows={3}
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button
+                          variant="outline"
+                          onClick={() => setShowNewCorrespondentDialog(false)}
+                        >
+                          Annuler
+                        </Button>
+                        <Button
+                          onClick={handleCreateNewCorrespondent}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          Créer
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
