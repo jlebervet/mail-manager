@@ -1,16 +1,9 @@
 from fastapi import Depends, HTTPException, Header, Security, status
 from fastapi_azure_auth.user import User as AzureUser
-from motor.motor_asyncio import AsyncIOMotorClient
-import os
 import jwt
 from datetime import datetime, timezone
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
-
-JWT_SECRET = os.environ.get('JWT_SECRET', 'fallback_secret_key_2025')
+JWT_SECRET = "fallback_secret_key_2025"
 JWT_ALGORITHM = "HS256"
 
 async def get_current_user_unified(
@@ -20,6 +13,11 @@ async def get_current_user_unified(
     """
     Unified authentication: Accepts both Azure AD tokens and legacy JWT tokens
     """
+    
+    # Import here to avoid circular dependency
+    from server import db
+    import os
+    import uuid
     
     # Try Azure AD first
     if azure_user and hasattr(azure_user, 'claims'):
@@ -54,7 +52,6 @@ async def get_current_user_unified(
                 }
             else:
                 # Create new user
-                import uuid
                 new_user = {
                     "id": str(uuid.uuid4()),
                     "email": email,
@@ -87,7 +84,8 @@ async def get_current_user_unified(
             raise HTTPException(status_code=401, detail="Invalid authentication scheme")
         
         # Try to decode as JWT
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        JWT_SECRET_ENV = os.environ.get('JWT_SECRET', JWT_SECRET)
+        payload = jwt.decode(token, JWT_SECRET_ENV, algorithms=[JWT_ALGORITHM])
         return payload
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
