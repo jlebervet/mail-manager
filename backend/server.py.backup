@@ -45,18 +45,6 @@ azure_scheme = SingleTenantAzureAuthorizationCodeBearer(
         settings.AZURE_SCOPE: settings.SCOPE_DESCRIPTION,
     },
     allow_guest_users=False,
-
-# Azure AD Wrappers pour les routes
-async def azure_user_dependency(azure_user: AzureUser = Security(azure_scheme)) -> dict:
-    """Get user from Azure AD and sync with MongoDB"""
-    from azure_auth import get_current_user_azure
-    return await get_current_user_azure(azure_user)
-
-async def azure_admin_dependency(current_user: dict = Depends(azure_user_dependency)) -> dict:
-    """Require admin role"""
-    from azure_auth import require_admin_azure
-    return await require_admin_azure(current_user)
-
 )
 
 # ===== MODELS =====
