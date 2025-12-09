@@ -100,7 +100,7 @@ const MessageDetailPage = ({ user }) => {
       setContent(mailData.content);
       setStatus(mailData.status);
       setAttachments(mailData.attachments || []);
-      setMessageType(mailData.message_type || "message");
+      setMessageType(mailData.message_type || "courrier");
       setIsRegistered(mailData.is_registered || false);
       setRegisteredNumber(mailData.registered_number || "");
       
