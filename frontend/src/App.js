@@ -94,6 +94,7 @@ function App() {
             }
           >
             <Route index element={<DashboardPage user={user} />} />
+            <Route path="stats" element={<AdvancedStatsPage user={user} />} />
             <Route path="messages/:type" element={<MessagesPage user={user} />} />
             <Route path="message/new/:type" element={<MessageDetailPage user={user} />} />
             <Route path="message/:id" element={<MessageDetailPage user={user} />} />
