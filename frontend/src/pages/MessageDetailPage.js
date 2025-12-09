@@ -456,7 +456,7 @@ const MessageDetailPage = ({ user }) => {
                     </Select>
                   </div>
 
-                  {(messageType === "message" || messageType === "colis") && (
+                  {(messageType === "courrier" || messageType === "colis") && (
                     <div className="space-y-4 p-4 bg-slate-50 rounded-lg">
                       <div className="flex items-center space-x-2">
                         <Checkbox
