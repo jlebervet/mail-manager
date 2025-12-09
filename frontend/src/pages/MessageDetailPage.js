@@ -51,6 +51,16 @@ const MessageDetailPage = ({ user }) => {
   const [attachments, setAttachments] = useState([]);
   const [correspondentSearch, setCorrespondentSearch] = useState("");
   const [openCorrespondent, setOpenCorrespondent] = useState(false);
+  
+  // État pour la modale de création de correspondant
+  const [showNewCorrespondentDialog, setShowNewCorrespondentDialog] = useState(false);
+  const [newCorrespondent, setNewCorrespondent] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    organization: "",
+    address: ""
+  });
 
   useEffect(() => {
     fetchCorrespondents();
