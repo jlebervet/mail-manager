@@ -23,6 +23,7 @@ import {
 
 const UserRolesPage = ({ user }) => {
   const [users, setUsers] = useState([]);
+  const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [newRole, setNewRole] = useState("");
@@ -32,6 +33,7 @@ const UserRolesPage = ({ user }) => {
 
   useEffect(() => {
     fetchUsers();
+    fetchServices();
   }, []);
 
   const fetchUsers = async () => {
@@ -44,6 +46,16 @@ const UserRolesPage = ({ user }) => {
       toast.error("Erreur lors du chargement des utilisateurs");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchServices = async () => {
+    try {
+      const response = await axios.get(`${API}/services`);
+      setServices(response.data);
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      toast.error("Erreur lors du chargement des services");
     }
   };
 
