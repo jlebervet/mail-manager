@@ -448,7 +448,7 @@ const MessageDetailPage = ({ user }) => {
                         <span>{messageTypeLabels[messageType]}</span>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="message">📧 Message</SelectItem>
+                        <SelectItem value="courrier">📧 Courrier postal</SelectItem>
                         <SelectItem value="email">💌 Email</SelectItem>
                         <SelectItem value="depot_main_propre">🤝 Dépôt main propre</SelectItem>
                         <SelectItem value="colis">📦 Colis</SelectItem>
