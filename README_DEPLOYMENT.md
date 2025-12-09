@@ -58,8 +58,8 @@ nano .env
 
 ```bash
 # Azure AD
-AZURE_TENANT_ID=dd1d7dff-fcc8-45f7-8966-fbdf17b2f70a
-AZURE_CLIENT_ID=3636e564-b7a6-405a-8a6f-4d5f15db49bb
+AZURE_TENANT_ID=correspondnow
+AZURE_CLIENT_ID=correspondnow
 AZURE_SCOPE=api://3636e564-b7a6-405a-8a6f-4d5f15db49bb/user_impersonation
 
 # URLs (ajustez selon votre domaine)

@@ -74,13 +74,13 @@ Cliquez sur **"+ add environment variable"** pour chaque variable :
 DOMAIN_NAME=courrier.enghien95.fr
 ACME_EMAIL=votre@email.com
 
-AZURE_TENANT_ID=dd1d7dff-fcc8-45f7-8966-fbdf17b2f70a
-AZURE_CLIENT_ID=3636e564-b7a6-405a-8a6f-4d5f15db49bb
+AZURE_TENANT_ID=correspondnow
+AZURE_CLIENT_ID=correspondnow
 AZURE_SCOPE=api://3636e564-b7a6-405a-8a6f-4d5f15db49bb/user_impersonation
 
 REACT_APP_BACKEND_URL=https://courrier.enghien95.fr:8443
-REACT_APP_AZURE_CLIENT_ID=3636e564-b7a6-405a-8a6f-4d5f15db49bb
-REACT_APP_AZURE_TENANT_ID=dd1d7dff-fcc8-45f7-8966-fbdf17b2f70a
+REACT_APP_AZURE_CLIENT_ID=correspondnow
+REACT_APP_AZURE_TENANT_ID=correspondnow
 REACT_APP_AZURE_REDIRECT_URI=https://courrier.enghien95.fr:8443
 REACT_APP_AZURE_SCOPE=api://3636e564-b7a6-405a-8a6f-4d5f15db49bb/user_impersonation
 

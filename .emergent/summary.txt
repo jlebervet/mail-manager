@@ -1,108 +1,115 @@
 <analysis>**original_problem_statement:**
-
 L'utilisateur souhaite créer une application full-stack pour la gestion de courriers et courriels.
 
 **PRODUCT REQUIREMENTS:**
-1.  **Authentification :** Login/mot de passe basé sur un token Azure (initialement moqué).
+1.  **Authentification :** L'objectif final est une authentification via Microsoft Azure AD. Actuellement, l'application a été ramenée à une authentification JWT simple (nom d'utilisateur/mot de passe) après de multiples échecs d'intégration d'Azure AD.
 2.  **Gestion des messages :**
-    *   Gérer les courriers, les emails, les dépôts en main propre et les colis.
-    *   Distinguer les messages entrants et sortants.
-    *   Glisser-déposer (drag-and-drop) pour les pièces jointes.
-    *   Un message est attribué à la première personne qui l'ouvre, avec possibilité de réassignation.
-3.  **Fonctionnalités avancées :**
-    *   Workflow simple : reçu -> traitement -> traité -> archivé.
-    *   Gestion des recommandés avec un numéro de suivi et une case à cocher.
-    *   Scan de code-barres depuis un smartphone/tablette pour le numéro de recommandé.
-    *   Possibilité de répondre à un message entrant pour créer un message sortant lié, assurant un suivi des échanges.
-4.  **Gestion des données :**
-    *   **Contacts :** Enregistrer les correspondants/destinataires dans une base de données pour l'autocomplétion.
-    *   **Services :** Ajouter des services et des sous-services (ex: Services Techniques > Urbanisme, Voirie).
-    *   **Suppression :** La suppression d'un service doit être un archivage (soft delete) avec une boîte de dialogue de confirmation, et non une suppression définitive.
-    *   **Import :** Une page d'import CSV réservée aux administrateurs pour importer des messages et contacts depuis une ancienne application.
-5.  **Permissions :** Gestion simple des droits pour les administrateurs.
-6.  **UI/UX :** Les cartes du tableau de bord (ex: En traitement, Archivés) doivent rediriger vers les sections et listes pré-filtrées correspondantes.
+    *   Gérer les courriers, les emails, les dépôts en main propre et les colis, avec une distinction entre entrants et sortants.
+    *   Workflow : reçu -> traitement -> traité -> archivé.
+    *   Créer un contact à la volée depuis le formulaire de message si celui-ci n'existe pas.
+    *   L'intitulé Message doit être Courrier postal dans le formulaire.
+3.  **Gestion des utilisateurs et permissions :**
+    *   Page de gestion des rôles pour les administrateurs.
+    *   Possibilité pour les admins de modifier les mots de passe des autres utilisateurs.
+    *   À l'avenir, les utilisateurs ne devraient voir que les messages de leur service.
+4.  **Tableau de bord :**
+    *   Afficher des statistiques (par mois/semaine/année, par type, par service).
+5.  **Déploiement :**
+    *   L'application doit être entièrement dockerisable pour un déploiement on-premise via Portainer, avec une documentation complète.
 
 **User's preferred language**: french
 
 **what currently exists?**
-Une application full-stack (React/FastAPI/MongoDB) fonctionnelle qui répond à la plupart des exigences initiales. Elle inclut :
-- L'authentification moquée et la gestion des utilisateurs (Admin/User).
-- Le CRUD complet pour les Messages (anciennement Courriers), les Services et les Correspondants.
-- Un tableau de bord avec des statistiques et des liens de navigation.
-- Un système de suivi des échanges permettant de lier des messages entrants et sortants.
-- Un système d'archivage (soft-delete) pour les services avec une boîte de dialogue de confirmation ( de Shadcn).
-- Un formulaire de message avancé qui gère différents types de messages (courrier, colis, etc.) et le suivi des recommandés.
-- Un composant de scan de code-barres qui utilise la caméra du smartphone (via ) et gère les permissions, avec un fallback pour la saisie manuelle.
-- Des filtres de statut fonctionnels sur la page des messages, activés par les liens du tableau de bord.
+Une application full-stack (React/FastAPI/MongoDB) avec une authentification JWT simple (nom d'utilisateur/mot de passe). Le code pour l'intégration Azure AD existe mais est cassé et a été désactivé pour rendre l'application stable.
+- Le CRUD pour les Messages, Services et Correspondants est fonctionnel.
+- Une page d'import CSV a été implémentée et testée.
+- Une modale de création de correspondant a été ajoutée au formulaire de message.
+- Une page de gestion des utilisateurs/rôles () existe.
+- L'application a été entièrement configurée pour le déploiement Docker/Portainer on-premise, avec des fichiers , , et une documentation détaillée.
+- Les ports par défaut ont été changés pour  et .
 
 **Last working item**:
-*   **Last item agent was working:** Implémentation de la fonctionnalité d'import de données via un fichier CSV pour les administrateurs. L'agent a créé le point de terminaison backend et la page frontend de base.
-*   **Status:** IN PROGRESS
-*   **Agent Testing Done:** N
-*   **Which testing method agent to use?** Frontend testing agent
-*   **User Testing Done:** N
+*   Last item agent was working: L'agent travaillait sur un lot de 4 demandes de l'utilisateur pour améliorer l'application en attendant de retenter l'intégration Azure AD. L'agent a commencé par :
+    1.  Renommer Message en Courrier postal dans le formulaire (Terminé).
+    2.  Ajouter l'interface pour la modification de mot de passe dans la page de gestion des rôles (En cours).
+*   Status: IN PROGRESS
+*   Agent Testing Done: N
+*   Which testing method agent to use? Frontend testing agent
+*   User Testing Done: N
 
 **All Pending/In progress Issue list**:
-*   **Issue 1:** Les émojis ne s'affichent pas dans le menu déroulant Type de message. (Priorité: P1)
-*   **Issue 2:** Le renommage de Courrier à Message est incomplet dans le code. (Priorité: P2)
+*   **Issue 1:** La connexion Microsoft Azure AD est complètement cassée. (Priorité: P0 - BLOQUANT)
+*   **Issue 2:** Les droits utilisateurs ne sont pas limités par service. (Priorité: P1)
+*   **Issue 3:** Les statistiques avancées du tableau de bord ne sont pas implémentées. (Priorité: P1)
 
 Issues Detail:
 *   **Issue 1:**
-    *   **Description:** Dans le formulaire de création/édition de message (), le menu déroulant pour le  affiche Message deux fois au lieu d'afficher les options avec leurs émojis (ex: 📧 Message, 📦 Colis).
-    *   **Attempted fixes:** Aucun. L'agent a remarqué le problème mais ne l'a pas corrigé.
+    *   **Description:** L'intégration de l'authentification Azure AD a échoué à plusieurs reprises. L'agent a tenté d'intégrer  et , mais a rencontré des erreurs successives : problèmes de cache CDN sur l'environnement de prévisualisation Emergent, erreurs d'initialisation MSAL (), erreurs de clé PKCE, et erreurs de dépendances et de structure dans le backend (, ). Finalement, l'agent a restauré l'authentification JWT simple pour stabiliser l'application.
+    *   **Attempted fixes:** L'agent a créé de multiples versions des fichiers , ,  et des fichiers de configuration Docker, sans succès durable.
     *   **Next debug checklist:**
-        1.  Vérifier le code dans  où les options du sélecteur sont définies.
-        2.  S'assurer que les chaînes de caractères avec émojis sont correctement encodées et rendues par le composant  de Shadcn.
-        3.  Inspecter le DOM dans le navigateur pour voir si les émojis sont présents mais non visibles (problème de police ou de CSS).
-    *   **Why fix this issue and what will be achieved with the fix?** Améliorer la clarté et l'expérience utilisateur en distinguant visuellement les types de messages.
-    *   **Status:** NOT STARTED
-    *   **Is recurring issue?** N
-    *   **Should Test frontend/backend/both after fix?** Frontend
+        1.  Repartir d'une base saine. Revoir entièrement la configuration dans  pour s'assurer que  est appelé correctement et une seule fois au démarrage de l'application.
+        2.  Vérifier que les variables d'environnement (, ) sont bien chargées dans .
+        3.  Côté backend, s'assurer que toutes les routes API sont protégées par une dépendance  qui utilise  et que la configuration (issuer, audience) correspond exactement à celle du token envoyé par le frontend.
+        4.  Confirmer que l'enregistrement de l'application dans Azure AD a bien les URI de redirection (y compris  pour le dev local) et que les flux d'octroi implicite sont activés.
+    *   **Why fix this issue and what will be achieved with the fix?** C'est une exigence principale de l'utilisateur pour la mise en production.
+    *   **Status:** BLOCKED
+    *   **Is recurring issue?** Y
+    *   **Should Test frontend/backend/both after fix?** both
+    *   **Blocked on other issue:** Non
 
 *   **Issue 2:**
-    *   **Description:** Bien que l'interface ait été mise à jour pour utiliser le terme Message, plusieurs fichiers et routes internes utilisent encore mail. Par exemple, , , et les routes API backend ().
-    *   **Attempted fixes:** L'agent a effectué un renommage partiel via des scripts, mais a laissé les noms de fichiers et les routes API intacts pour éviter de casser la liaison avec la collection MongoDB .
-    *   **Next debug checklist:** Ce n'est pas un bug bloquant, mais une dette technique. Une refactorisation pourrait être envisagée pour harmoniser les noms.
-        1.  Renommer  -> .
-        2.  Renommer  -> .
-        3.  Mettre à jour les importations et les routes dans  et .
-    *   **Why fix this issue and what will be achieved with the fix?** Améliorer la maintenabilité et la cohérence du code.
+    *   **Description:** Tous les utilisateurs, quel que soit leur service, peuvent voir tous les messages. La demande est de restreindre la visibilité aux seuls messages appartenant à leur service.
+    *   **Next debug checklist:**
+        1.  Ajouter un champ  au modèle utilisateur dans la base de données.
+        2.  Modifier la page de gestion des utilisateurs pour permettre aux administrateurs d'assigner un service à un utilisateur.
+        3.  Modifier les endpoints backend (ex: ) pour filtrer les résultats en fonction du  de l'utilisateur authentifié (sauf pour les admins qui voient tout).
     *   **Status:** NOT STARTED
     *   **Is recurring issue?** N
-    *   **Should Test frontend/backend/both after fix?** Frontend
+    *   **Should Test frontend/backend/both after fix?** Both
+
+*   **Issue 3:**
+    *   **Description:** Le tableau de bord affiche des statistiques de base. L'utilisateur souhaite des filtres par période (mois/semaine/année), type de message et service.
+    *   **Next debug checklist:**
+        1.  Créer ou modifier le point de terminaison backend  pour qu'il accepte des paramètres de filtrage (période, service_id, etc.).
+        2.  Implémenter la logique d'agrégation dans MongoDB pour calculer ces statistiques.
+        3.  Ajouter les composants UI (menus déroulants, sélecteurs de date) sur  pour que l'utilisateur puisse choisir les filtres.
+    *   **Status:** NOT STARTED
+    *   **Is recurring issue?** N
+    *   **Should Test frontend/backend/both after fix?** Both
 
 **In progress Task List**:
-*   **Task 1:** Terminer la fonctionnalité d'import CSV (Priorité: P0)
+*   **Task 1:** Finaliser l'ajout de la modification de mot de passe. (Priorité: P0)
 
 Task Detail:
 *   **Task 1:**
     *   **Where to resume:**
-        1.  **Frontend:** Développer l'interface utilisateur dans . Ajouter un composant de sélection de fichier, un bouton pour lancer l'upload, et des éléments pour afficher la progression et les résultats (succès, erreurs par ligne).
-        2.  **Navigation:** Ajouter un lien vers la page  dans la barre de navigation latérale (), visible uniquement pour les utilisateurs ayant le rôle admin.
-        3.  **Backend:** Affiner la gestion des erreurs dans le endpoint  pour retourner des rapports détaillés sur les lignes qui ont échoué.
-    *   **What will be achieved with this?** Permettre aux administrateurs de migrer les données d'une application existante vers la nouvelle.
+        1.  **Backend:** Créer un nouveau point de terminaison API, par exemple , qui accepte un nouveau mot de passe. Cette route doit être protégée et accessible uniquement aux administrateurs. Elle doit hasher le nouveau mot de passe avec  avant de le stocker.
+        2.  **Frontend:** Dans , finaliser la fonction  pour appeler ce nouveau point de terminaison.
+    *   **What will be achieved with this?** Permettre aux administrateurs de gérer les mots de passe des utilisateurs.
     *   **Status:** IN PROGRESS
     *   **Should Test frontend/backend/both after fix?** Both
     *   **Blocked on something:** Non
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **Remplacer l'authentification moquée par une véritable intégration Azure AD (P1).**
-        *   Utiliser l'agent  pour obtenir la bonne méthode d'intégration pour FastAPI et React avec Azure AD.
-        *   Implémenter le flux de connexion côté client et la validation du token côté serveur.
+    *   (P0) Ré-implémenter l'authentification Azure AD de manière stable.
+    *   (P1) Implémenter la limitation des droits par service.
+    *   (P1) Implémenter les statistiques avancées sur le tableau de bord.
 *   **Future Tasks:**
-    *   Améliorer le système de workflow si l'utilisateur demande des étapes ou des conditions plus complexes.
+    *   Harmoniser le nommage des fichiers et des routes API qui utilisent encore mail au lieu de message.
+    *   Améliorer le système de workflow avec des étapes plus complexes si demandé.
 
 **Completed work in this session**
-- **Refonte de Courrier en Message :** L'application a été mise à jour pour utiliser le terme Message.
-- **Champs de Message Avancés :** Ajout des champs ,  et .
-- **Scan de Code-Barres :** Implémentation d'un scanner via la caméra du smartphone avec gestion des permissions et fallback manuel.
-- **Système d'Archivage pour les Services :** Remplacement de la suppression définitive par un archivage/restauration, avec boîtes de dialogue de confirmation.
-- **Correction des Liens du Tableau de Bord :** Les cartes du tableau de bord redirigent maintenant vers des listes pré-filtrées par statut.
-- **Correction de Bugs de Navigation Critiques :** Résolution des conflits de routes qui empêchaient d'ouvrir les messages existants.
+- **Dockerisation et Documentation de déploiement :** Création complète des fichiers (, , scripts) et de la documentation (, ) pour un déploiement on-premise avec Portainer, Traefik et Let's Encrypt. Les ports de l'application ont été changés pour  (frontend) et  (backend).
+- **Restauration de la Stabilité :** L'application a été ramenée à un état stable en restaurant l'authentification JWT simple après les échecs répétés de l'intégration Azure AD.
+- **Ajout de la Modale Nouveau Correspondant :** Un bouton et une modale ont été ajoutés dans le formulaire de message () pour créer un correspondant à la volée.
+- **Route de Gestion des Rôles :** La route  a été ajoutée et la page est désormais accessible aux administrateurs.
+- **Suppression du logo Emergent :** Le badge Emergent a été retiré du fichier .
+- **Finalisation de l'Import CSV :** La fonctionnalité a été complétée et testée avec succès via .
+- **Création du script :** Le script manquant pour initialiser la base de données avec les données de base (utilisateurs, services) a été créé.
 
 **Earlier issues found/mentioned but not fixed**
-Aucun problème connu non résolu, à l'exception de ceux listés dans **All Pending/In progress Issue list**.
+- **Problème de build frontend sur serveur on-premise :** Le déploiement sur le serveur de l'utilisateur a révélé plusieurs problèmes de build (, conflits de ). L'agent a fourni plusieurs versions de  et  pour contourner ces problèmes. La solution la plus stable semble être l'utilisation de  ou la suppression du volume . Ce problème est susceptible de réapparaître.
 
 **Known issue recurrence from previous fork**
 N/A
@@ -111,146 +118,100 @@ N/A
 
 
 **Key Technical Concepts**
-- **Backend:** FastAPI, Pydantic, Motor (client MongoDB asynchrone).
-- **Frontend:** React, React Router, Tailwind CSS.
-- **UI:** Bibliothèque de composants Shadcn/UI.
-- **Database:** MongoDB.
-- **Intégrations:**  pour le scan de code-barres.
+- **Backend:** FastAPI, Pydantic, Motor
+- **Frontend:** React, React Router, Tailwind CSS, Shadcn/UI
+- **Database:** MongoDB
+- **Authentification:** JWT (actuellement), tentative d'intégration Azure AD (cassée)
+- **Déploiement:** Docker, Docker Compose, Portainer, Traefik (pour reverse proxy et HTTPS)
 
 **key DB schema**
 -   **mails:** 
 -   **services:** 
 -   **correspondents:** 
--   **users:** 
+-   **users:**  (Note: le mot de passe est hashé)
 
 **changes in tech stack**
-Aucun changement majeur de la stack technologique. Ajout de la bibliothèque  côté frontend.
+- Ajout de  (backend) et ,  (frontend) pour la tentative d'intégration Azure AD.
+- L'environnement de déploiement cible est désormais Docker/Portainer.
 
 **All files of reference**
-*   **/app/backend/server.py:** Contient toute la logique backend, y compris le nouveau endpoint .
-*   **/app/frontend/src/pages/ImportPage.js:** Nouveau fichier pour la fonctionnalité d'import, actuellement un placeholder.
-*   **/app/frontend/src/App.js:** Fichier de routage principal, mis à jour pour inclure la route .
-*   **/app/frontend/src/pages/MailDetailPage.js:** A été modifié pour inclure le composant de scan de code-barres et les nouveaux champs de message.
-*   **/app/frontend/src/components/BarcodeScanner.js:** Nouveau composant pour la fonctionnalité de scan.
-*   **/app/frontend/src/pages/ServicesPage.js:** Contient la logique complexe pour l'archivage/restauration avec .
-*   **/app/frontend/src/pages/DashboardPage.js:** Mis à jour pour inclure des liens de navigation avec des paramètres de filtrage.
+*   **/app/backend/server.py:** Fichier principal du backend. Actuellement configuré pour l'authentification JWT simple. Les tentatives de modification pour Azure AD l'ont rendu instable.
+*   **/app/frontend/src/App.js:** Fichier principal du frontend. Gère la logique d'authentification. A été modifié de nombreuses fois pour MSAL et finalement restauré à une version plus simple.
+*   **/app/frontend/src/pages/LoginPage.js:** Page de connexion. Plusieurs versions ont été créées (MSAL, hybride), mais la version actuelle est une simple connexion par email/mot de passe.
+*   **/app/frontend/src/pages/UserRolesPage.js:** En cours de modification pour ajouter le changement de mot de passe.
+*   **/app/docker-compose-portainer.yml:** Fichier de configuration principal pour le déploiement sur le serveur de l'utilisateur.
+*   **/app/PORTAINER_DEPLOYMENT.md:** Guide principal pour le déploiement.
+*   **/app/backend/scripts/init_data.py:** Script pour créer les données initiales (utilisateurs de test, services).
+*   **/app/backend/scripts/set_first_admin.py:** Script pour promouvoir un utilisateur existant au rôle d'admin.
+
+**Areas that need refactoring**:
+- **Authentification :** Le code d'authentification est très désordonné avec de nombreux fichiers de sauvegarde (, etc.) et des tentatives d'implémentation abandonnées. Une refonte complète est nécessaire pour intégrer proprement Azure AD ou pour nettoyer et solidifier l'authentification JWT existante.
+- **server.py :** Ce fichier monolithique de plus de 800 lignes devrait être découpé en plusieurs modules (ex: , , ) pour améliorer la maintenabilité.
+
+**key api endpoints**
+- : Connexion avec l'authentification JWT simple.
+- : Importation de messages et correspondants.
+- , : Gestion des utilisateurs.
 
 **Critical Info for New Agent**
-- **Nommage API vs. DB:** Les routes de l'API backend pour les messages sont  pour correspondre au nom de la collection MongoDB (). Le frontend, qui utilise le terme Message, doit impérativement appeler ces routes et non . C'était une source de bugs.
-- **Composants UI :** Le projet utilise intensivement les composants Shadcn/UI. Pour les boîtes de dialogue de confirmation, il faut utiliser  et non .
-- **Dépendances :** Le frontend utilise yarn install v1.22.22
-[1/4] Resolving packages...
-[2/4] Fetching packages...
-[3/4] Linking dependencies...
-[4/4] Building fresh packages...
-success Saved lockfile.
-Done in 0.03s. pour la gestion des paquets. Le backend utilise 
-Usage:   
-  pip <command> [options]
-
-Commands:
-  install                     Install packages.
-  lock                        Generate a lock file.
-  download                    Download packages.
-  uninstall                   Uninstall packages.
-  freeze                      Output installed packages in requirements format.
-  inspect                     Inspect the python environment.
-  list                        List installed packages.
-  show                        Show information about installed packages.
-  check                       Verify installed packages have compatible dependencies.
-  config                      Manage local and global configuration.
-  search                      Search PyPI for packages.
-  cache                       Inspect and manage pip's wheel cache.
-  index                       Inspect information available from package indexes.
-  wheel                       Build wheels from your requirements.
-  hash                        Compute hashes of package archives.
-  completion                  A helper command used for command completion.
-  debug                       Show information useful for debugging.
-  help                        Show help for commands.
-
-General Options:
-  -h, --help                  Show help.
-  --debug                     Let unhandled exceptions propagate outside the
-                              main subroutine, instead of logging them to
-                              stderr.
-  --isolated                  Run pip in an isolated mode, ignoring
-                              environment variables and user configuration.
-  --require-virtualenv        Allow pip to only run in a virtual environment;
-                              exit with an error otherwise.
-  --python <python>           Run pip with the specified Python interpreter.
-  -v, --verbose               Give more output. Option is additive, and can be
-                              used up to 3 times.
-  -V, --version               Show version and exit.
-  -q, --quiet                 Give less output. Option is additive, and can be
-                              used up to 3 times (corresponding to WARNING,
-                              ERROR, and CRITICAL logging levels).
-  --log <path>                Path to a verbose appending log.
-  --no-input                  Disable prompting for input.
-  --keyring-provider <keyring_provider>
-                              Enable the credential lookup via the keyring
-                              library if user input is allowed. Specify which
-                              mechanism to use [auto, disabled, import,
-                              subprocess]. (default: auto)
-  --proxy <proxy>             Specify a proxy in the form
-                              scheme://[user:passwd@]proxy.server:port.
-  --retries <retries>         Maximum attempts to establish a new HTTP
-                              connection. (default: 5)
-  --timeout <sec>             Set the socket timeout (default 15 seconds).
-  --exists-action <action>    Default action when a path already exists:
-                              (s)witch, (i)gnore, (w)ipe, (b)ackup, (a)bort.
-  --trusted-host <hostname>   Mark this host or host:port pair as trusted,
-                              even though it does not have valid or any HTTPS.
-  --cert <path>               Path to PEM-encoded CA certificate bundle. If
-                              provided, overrides the default. See 'SSL
-                              Certificate Verification' in pip documentation
-                              for more information.
-  --client-cert <path>        Path to SSL client certificate, a single file
-                              containing the private key and the certificate
-                              in PEM format.
-  --cache-dir <dir>           Store the cache data in <dir>.
-  --no-cache-dir              Disable the cache.
-  --disable-pip-version-check
-                              Don't periodically check PyPI to determine
-                              whether a new version of pip is available for
-                              download. Implied with --no-index.
-  --no-color                  Suppress colored output.
-  --use-feature <feature>     Enable new functionality, that may be backward
-                              incompatible.
-  --use-deprecated <feature>  Enable deprecated functionality, that will be
-                              removed in the future.
-  --resume-retries <resume_retries>
-                              Maximum attempts to resume or restart an
-                              incomplete download. (default: 5).
+- **Priorité à la stabilité :** L'utilisateur est devenu frustré par les échecs répétés, en particulier concernant le déploiement on-premise et l'authentification Azure. Chaque modification doit être testée rigoureusement. Ne pas tenter de grosses refontes (comme Azure AD) sans un plan solide et l'approbation de l'utilisateur.
+- **Déploiement On-Premise :** L'environnement cible de l'utilisateur est son propre serveur géré avec Portainer. Les instructions et fichiers de déploiement créés (, ) sont cruciaux et doivent être maintenus à jour. L'environnement de prévisualisation Emergent n'est plus la cible principale et souffre de problèmes de cache CDN qui peuvent être trompeurs.
+- **Budget de crédits :** L'utilisateur est conscient de son budget de crédits et préfère des solutions directes et efficaces plutôt que de longues sessions de débogage par essais et erreurs.
+- **Restauration de l'authentification :** L'application a été **volontairement ramenée** à une authentification JWT simple et fonctionnelle. Ne supposez pas que l'authentification Azure est partiellement fonctionnelle ; elle est actuellement cassée et désactivée.
 
 **documents created in this job**
-N/A
+- /app/README_DEPLOYMENT.md
+- /app/setup.sh
+- /app/kubernetes.yml
+- /app/build-docker.sh
+- /app/README.md
+- /app/Makefile
+- /app/QUICKSTART.md
+- /app/PORTAINER_DEPLOYMENT.md
+- /app/docker-compose-portainer.yml
+- /app/PORTAINER_GUIDE.md
+- /app/PORTAINER_SECRETS.md
+- /app/PORTAINER_FIX.md
+- /app/portainer-production.yml
+- etc. (de nombreux fichiers de configuration et de documentation pour le déploiement)
 
 **Last 10 User Messages and any pending user messages**
-1.  **User (Message 239):** A demandé de renommer Courrier en Message, d'ajouter des types de messages, la gestion des recommandés et le scan de code-barres. **(Terminé)**
-2.  **User (Message 278):** A signalé que le scan ne fonctionnait pas sur smartphone. **(Corrigé)**
-3.  **User (Message 301):** A signalé que l'autorisation de la caméra n'était pas demandée. **(Corrigé)**
-4.  **User (Message 312):** A signalé des bugs de navigation (cliquer sur un message ouvrait un nouveau message). **(Corrigé)**
-5.  **User (Message 355):** A signalé que les liens de filtre du tableau de bord ne fonctionnaient pas. **(Corrigé)**
-6.  **User (Message 378):** A demandé une fonctionnalité d'import CSV. **(En cours)**
+1.  **User:** Demande une estimation du coût en crédits pour l'authentification Azure. (Répondu)
+2.  **User:** Demande 4 nouvelles fonctionnalités en attendant Azure : changer les mots de passe, stats avancées, permissions par service, renommer Message. (En cours)
+3.  **User:** Signale que les crédits sont bas. (Confirmé)
+4.  **User:** Approuve le plan de travail sur les 4 nouvelles fonctionnalités. (Action prise)
+5.  **User:** La page de gestion des rôles ne s'affiche pas. (Corrigé, la route manquait)
+6.  **User:** La modale de création de correspondant n'apparaît pas automatiquement. (Corrigé)
+7.  **User:** Demande la mise à jour de la documentation, notamment pour l'initialisation de l'admin. (Terminé)
+8.  **User:** Signale que la connexion à la console du conteneur backend ne fonctionne pas. (Solutions proposées)
+9.  **User:** Signale que la base de données est vide et que les enregistrements ne se font pas. (Diagnostiqué,  manquant, puis corrigé).
+10. **User:** Signale que le script  n'existe pas. (Corrigé, le script a été créé).
+11. **User:** Signale un bug de la page web (). (Diagnostiqué comme des  corrompus, solution proposée).
+12. **User:** Signale que l'utilisateur ne se crée pas dans la base de données après connexion Microsoft. (Diagnostiqué comme un problème de token 'Invalid issuer', l'agent a décidé de restaurer l'auth JWT).
 
 **Project Health Check:**
-*   **Broken:** Rien n'est actuellement cassé, mais la fonctionnalité d'import est incomplète.
-*   **Mocked:** L'authentification Azure AD est moquée.
+*   **Broken:** L'authentification Microsoft Azure AD est non fonctionnelle. Le code associé est présent mais a été désactivé.
+*   **Mocked:** L'authentification actuelle est une authentification JWT simple, qui sert de substitut à Azure AD.
 
-**3rd Party Integrations**:
-*   html5-qrcode — Ne requiert pas de clé API.
+**3rd Party Integrations**
+*   html5-qrcode — Scan de code-barres, pas de clé API.
+*   Microsoft Azure Active Directory — (Tentative d'intégration, actuellement **cassée**). Nécessite un Client ID, Tenant ID, etc.
+*   Docker Hub — Utilisé implicitement pour les images de base (, ).
+*   Traefik — Utilisé dans la configuration de déploiement pour le reverse proxy.
+*   Let's Encrypt — Utilisé par Traefik pour les certificats SSL.
 
 **Testing status**
-*   **Testing agent used after significant changes:** YES
-*   **Troubleshoot agent used after agent stuck in loop:** NO
+*   **Testing agent used after significant changes:** YES (une fois, avant les tentatives de déploiement on-premise)
+*   **Troubleshoot agent used after agent stuck in loop:** YES (pour restaurer le backend)
 *   **Test files created:** []
-*   **Known regressions:** None
+*   **Known regressions:** L'authentification Azure AD qui était le but initial a été complètement abandonnée au profit d'une version stable mais moins fonctionnelle (JWT).
 
 **Credentials to test flow:**
-Les informations de connexion sont initialisées par le script . Les identifiants sont :
+L'authentification utilise maintenant la base de données interne. Les utilisateurs doivent être créés par le script .
 -   **Admin:**  / 
 -   **User:**  / 
+Ces utilisateurs doivent être présents dans la collection  de la base de données MongoDB.
 
 **What agent forgot to execute**
-- L'agent a remarqué que les émojis ne s'affichaient pas dans le menu déroulant des types de message mais a poursuivi sans le corriger.
-- L'agent n'a pas harmonisé les noms de fichiers (ex: ) après le renommage de Courrier en Message, créant une légère dette technique.</analysis>
+- L'agent n'a pas pu mener à bien l'exigence principale de l'utilisateur : l'intégration complète et fonctionnelle d'Azure AD.
+- L'agent a commencé à travailler sur les 4 nouvelles fonctionnalités demandées mais ne les a pas terminées. Seul le renommage de Message et le début de l'UI pour le changement de mot de passe ont été faits. Les statistiques et les permissions par service n'ont pas été commencées.</analysis>

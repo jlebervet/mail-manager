@@ -530,12 +530,12 @@ Actions rapides apparaissent :
 Copiez-collez dans un fichier texte pour référence :
 
 ```
-AZURE_TENANT_ID=dd1d7dff-fcc8-45f7-8966-fbdf17b2f70a
-AZURE_CLIENT_ID=3636e564-b7a6-405a-8a6f-4d5f15db49bb
+AZURE_TENANT_ID=correspondnow
+AZURE_CLIENT_ID=correspondnow
 AZURE_SCOPE=api://3636e564-b7a6-405a-8a6f-4d5f15db49bb/user_impersonation
 REACT_APP_BACKEND_URL=http://VOTRE-IP-SERVEUR:8888
-REACT_APP_AZURE_CLIENT_ID=3636e564-b7a6-405a-8a6f-4d5f15db49bb
-REACT_APP_AZURE_TENANT_ID=dd1d7dff-fcc8-45f7-8966-fbdf17b2f70a
+REACT_APP_AZURE_CLIENT_ID=correspondnow
+REACT_APP_AZURE_TENANT_ID=correspondnow
 REACT_APP_AZURE_REDIRECT_URI=http://VOTRE-IP-SERVEUR:3333
 REACT_APP_AZURE_SCOPE=api://3636e564-b7a6-405a-8a6f-4d5f15db49bb/user_impersonation
 MONGO_INITDB_ROOT_USERNAME=admin
