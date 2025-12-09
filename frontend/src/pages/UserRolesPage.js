@@ -184,6 +184,16 @@ const UserRolesPage = ({ user }) => {
                       <SelectItem value="admin">Administrateur</SelectItem>
                     </SelectContent>
                   </Select>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleOpenPasswordDialog(u.id, u.name)}
+                    className="flex items-center gap-2"
+                  >
+                    <Key className="h-4 w-4" />
+                    Mot de passe
+                  </Button>
                 </div>
               </div>
             ))}
