@@ -682,6 +682,17 @@ async def update_user_password(user_id: str, password_update: PasswordUpdate, ad
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "Mot de passe mis à jour avec succès"}
 
+class ServiceAssignment(BaseModel):
+    service_id: Optional[str] = None
+
+@api_router.put("/users/{user_id}/service")
+async def update_user_service(user_id: str, service_assignment: ServiceAssignment, admin_user: dict = Depends(require_admin)):
+    """Update user service (admin only)"""
+    result = await db.users.update_one({"id": user_id}, {"$set": {"service_id": service_assignment.service_id}})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"message": "Service utilisateur mis à jour avec succès"}
+
 @api_router.delete("/users/{user_id}")
 async def delete_user(user_id: str, admin_user: dict = Depends(require_admin)):
     """Delete a user (admin only)"""
