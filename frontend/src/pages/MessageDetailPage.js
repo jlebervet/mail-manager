@@ -40,7 +40,7 @@ const MessageDetailPage = ({ user }) => {
   const [assignedTo, setAssignedTo] = useState(null);
   
   // New fields
-  const [messageType, setMessageType] = useState("message");
+  const [messageType, setMessageType] = useState("courrier");
   const [isRegistered, setIsRegistered] = useState(false);
   const [registeredNumber, setRegisteredNumber] = useState("");
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
