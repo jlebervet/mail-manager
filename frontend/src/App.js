@@ -10,6 +10,7 @@ import MessageDetailPage from "./pages/MessageDetailPage";
 import ServicesPage from "./pages/ServicesPage";
 import CorrespondentsPage from "./pages/CorrespondentsPage";
 import UsersPage from "./pages/UsersPage";
+import UserRolesPage from "./pages/UserRolesPage";
 import ImportPage from "./pages/ImportPage";
 import { Toaster } from "./components/ui/sonner";
 
