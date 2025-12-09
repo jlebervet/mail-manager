@@ -65,6 +65,35 @@ const UserRolesPage = ({ user }) => {
     }
   };
 
+  const handleOpenPasswordDialog = (userId, userName) => {
+    setPasswordData({ userId, userName, newPassword: "", confirmPassword: "" });
+    setShowPasswordDialog(true);
+  };
+
+  const handlePasswordChange = async () => {
+    // Validation
+    if (!passwordData.newPassword || passwordData.newPassword.length < 6) {
+      toast.error("Le mot de passe doit contenir au moins 6 caractères");
+      return;
+    }
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error("Les mots de passe ne correspondent pas");
+      return;
+    }
+
+    try {
+      await axios.put(`${API}/users/${passwordData.userId}/password`, {
+        new_password: passwordData.newPassword
+      });
+      toast.success(`Mot de passe mis à jour pour ${passwordData.userName}`);
+      setShowPasswordDialog(false);
+      setPasswordData({ userId: "", userName: "", newPassword: "", confirmPassword: "" });
+    } catch (error) {
+      console.error("Error updating password:", error);
+      toast.error(error.response?.data?.detail || "Erreur lors de la mise à jour du mot de passe");
+    }
+  };
+
   const getRoleBadge = (role) => {
     if (role === "admin") {
       return (
