@@ -740,6 +740,86 @@ async def get_stats(current_user: dict = Depends(get_current_user)):
         "assigned_to_me": assigned_to_me
     }
 
+@api_router.get("/stats/advanced")
+async def get_advanced_stats(
+    period: Optional[str] = "all",  # "week", "month", "year", "all"
+    service_id: Optional[str] = None,
+    message_type: Optional[str] = None,  # "courrier", "email", "depot_main_propre", "colis"
+    current_user: dict = Depends(get_current_user)
+):
+    """Get advanced statistics with filters"""
+    from datetime import timedelta
+    
+    query = {}
+    
+    # If user is not admin and has a service_id, filter by their service (unless they explicitly filter by another service)
+    if current_user.get("role") != "admin" and current_user.get("service_id"):
+        query["service_id"] = current_user.get("service_id")
+    elif service_id:
+        query["service_id"] = service_id
+    
+    # Filter by message type
+    if message_type:
+        query["message_type"] = message_type
+    
+    # Filter by period
+    if period != "all":
+        now = datetime.now(timezone.utc)
+        if period == "week":
+            start_date = now - timedelta(days=7)
+        elif period == "month":
+            start_date = now - timedelta(days=30)
+        elif period == "year":
+            start_date = now - timedelta(days=365)
+        else:
+            start_date = None
+        
+        if start_date:
+            query["created_at"] = {"$gte": start_date.isoformat()}
+    
+    # Get statistics
+    total_mails = await db.mails.count_documents(query)
+    
+    entrant_query = {**query, "type": "entrant"}
+    sortant_query = {**query, "type": "sortant"}
+    entrant_mails = await db.mails.count_documents(entrant_query)
+    sortant_mails = await db.mails.count_documents(sortant_query)
+    
+    status_counts = {}
+    for status in ["recu", "traitement", "traite", "archive"]:
+        status_query = {**query, "status": status}
+        status_counts[status] = await db.mails.count_documents(status_query)
+    
+    # Get statistics by message type
+    message_type_counts = {}
+    for msg_type in ["courrier", "email", "depot_main_propre", "colis"]:
+        type_query = {**query, "message_type": msg_type}
+        message_type_counts[msg_type] = await db.mails.count_documents(type_query)
+    
+    # Get statistics by service (only for admins)
+    service_counts = {}
+    if current_user.get("role") == "admin":
+        services = await db.services.find({}, {"_id": 0, "id": 1, "name": 1}).to_list(100)
+        for service in services:
+            service_query = {**{k: v for k, v in query.items() if k != "service_id"}, "service_id": service["id"]}
+            count = await db.mails.count_documents(service_query)
+            if count > 0:
+                service_counts[service["name"]] = count
+    
+    return {
+        "total_mails": total_mails,
+        "entrant_mails": entrant_mails,
+        "sortant_mails": sortant_mails,
+        "status_counts": status_counts,
+        "message_type_counts": message_type_counts,
+        "service_counts": service_counts,
+        "filters": {
+            "period": period,
+            "service_id": service_id,
+            "message_type": message_type
+        }
+    }
+
 # ===== IMPORT ROUTES =====
 
 class ImportStats(BaseModel):
