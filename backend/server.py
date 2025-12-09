@@ -666,6 +666,20 @@ async def update_user_role(user_id: str, role: str, admin_user: dict = Depends(r
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "User role updated"}
 
+class PasswordUpdate(BaseModel):
+    new_password: str
+
+@api_router.put("/users/{user_id}/password")
+async def update_user_password(user_id: str, password_update: PasswordUpdate, admin_user: dict = Depends(require_admin)):
+    """Update user password (admin only)"""
+    if not password_update.new_password or len(password_update.new_password) < 6:
+        raise HTTPException(status_code=400, detail="Le mot de passe doit contenir au moins 6 caractères")
+    
+    result = await db.users.update_one({"id": user_id}, {"$set": {"password": password_update.new_password}})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"message": "Mot de passe mis à jour avec succès"}
+
 @api_router.delete("/users/{user_id}")
 async def delete_user(user_id: str, admin_user: dict = Depends(require_admin)):
     """Delete a user (admin only)"""
