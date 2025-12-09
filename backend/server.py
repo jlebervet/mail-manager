@@ -47,6 +47,59 @@ azure_scheme = SingleTenantAzureAuthorizationCodeBearer(
     allow_guest_users=False,
 )
 
+# Azure AD User Dependency
+async def get_azure_user_and_sync(azure_user: AzureUser = Security(azure_scheme)) -> dict:
+    """Get user from Azure AD and sync with MongoDB"""
+    try:
+        email = azure_user.claims.get("preferred_username") or azure_user.claims.get("email") or azure_user.claims.get("upn")
+        name = azure_user.claims.get("name", email or "User")
+        oid = azure_user.claims.get("oid", "")
+        
+        if not email:
+            raise HTTPException(status_code=401, detail="Email not found")
+        
+        existing_user = await db.users.find_one({"email": email}, {"_id": 0})
+        
+        if existing_user:
+            if existing_user.get("oid") != oid:
+                await db.users.update_one(
+                    {"id": existing_user["id"]},
+                    {"$set": {"oid": oid, "name": name}}
+                )
+            return {
+                "id": existing_user["id"],
+                "email": existing_user["email"],
+                "name": existing_user["name"],
+                "role": existing_user.get("role", "user"),
+                "oid": oid
+            }
+        else:
+            new_user = {
+                "id": str(uuid.uuid4()),
+                "email": email,
+                "name": name,
+                "role": "user",
+                "oid": oid,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "password": ""
+            }
+            await db.users.insert_one(new_user)
+            return {
+                "id": new_user["id"],
+                "email": email,
+                "name": name,
+                "role": "user",
+                "oid": oid
+            }
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Auth failed: {str(e)}")
+
+async def require_admin_azure_dep(current_user: dict = Depends(get_azure_user_and_sync)) -> dict:
+    """Require admin role"""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin required")
+    return current_user
+
 # ===== MODELS =====
 
 class User(BaseModel):
