@@ -262,7 +262,7 @@ async def get_azure_user_info(azure_user = Security(azure_scheme)):
     return user_info
 
 @api_router.post("/auth/register", response_model=User)
-async def register(user_create: UserCreate, admin_user: dict = Depends(azure_admin_dependency)):
+async def register(user_create: UserCreate, admin_user: dict = Depends(require_admin)):
     """Register a new user (admin only)"""
     # Check if user already exists
     existing = await db.users.find_one({"email": user_create.email})
@@ -296,7 +296,7 @@ async def get_services(
     return services
 
 @api_router.post("/services", response_model=Service)
-async def create_service(service_create: ServiceCreate, admin_user: dict = Depends(azure_admin_dependency)):
+async def create_service(service_create: ServiceCreate, admin_user: dict = Depends(require_admin)):
     """Create a new service (admin only)"""
     service = Service(**service_create.model_dump())
     doc = service.model_dump()
@@ -306,7 +306,7 @@ async def create_service(service_create: ServiceCreate, admin_user: dict = Depen
     return service
 
 @api_router.put("/services/{service_id}", response_model=Service)
-async def update_service(service_id: str, service_update: ServiceCreate, admin_user: dict = Depends(azure_admin_dependency)):
+async def update_service(service_id: str, service_update: ServiceCreate, admin_user: dict = Depends(require_admin)):
     """Update a service (admin only)"""
     service = Service(id=service_id, **service_update.model_dump())
     doc = service.model_dump()
@@ -319,7 +319,7 @@ async def update_service(service_id: str, service_update: ServiceCreate, admin_u
     return service
 
 @api_router.delete("/services/{service_id}")
-async def delete_service(service_id: str, admin_user: dict = Depends(azure_admin_dependency)):
+async def delete_service(service_id: str, admin_user: dict = Depends(require_admin)):
     """Archive a service (admin only) - soft delete"""
     # Check if service has associated mails
     mails_count = await db.mails.count_documents({"service_id": service_id})
@@ -351,7 +351,7 @@ async def delete_service(service_id: str, admin_user: dict = Depends(azure_admin
     }
 
 @api_router.post("/services/{service_id}/restore")
-async def restore_service(service_id: str, admin_user: dict = Depends(azure_admin_dependency)):
+async def restore_service(service_id: str, admin_user: dict = Depends(require_admin)):
     """Restore an archived service (admin only)"""
     result = await db.services.update_one(
         {"id": service_id},
@@ -415,7 +415,7 @@ async def update_correspondent(correspondent_id: str, correspondent_update: Corr
     return correspondent
 
 @api_router.delete("/correspondents/{correspondent_id}")
-async def delete_correspondent(correspondent_id: str, admin_user: dict = Depends(azure_admin_dependency)):
+async def delete_correspondent(correspondent_id: str, admin_user: dict = Depends(require_admin)):
     """Delete a correspondent (admin only)"""
     result = await db.correspondents.delete_one({"id": correspondent_id})
     if result.deleted_count == 0:
@@ -638,7 +638,7 @@ async def add_attachment(mail_id: str, file: UploadFile = File(...), current_use
     return attachment
 
 @api_router.delete("/mails/{mail_id}")
-async def delete_mail(mail_id: str, admin_user: dict = Depends(azure_admin_dependency)):
+async def delete_mail(mail_id: str, admin_user: dict = Depends(require_admin)):
     """Delete a mail (admin only)"""
     result = await db.mails.delete_one({"id": mail_id})
     if result.deleted_count == 0:
@@ -648,7 +648,7 @@ async def delete_mail(mail_id: str, admin_user: dict = Depends(azure_admin_depen
 # ===== USERS ROUTES (Admin) =====
 
 @api_router.get("/users", response_model=List[User])
-async def get_users(admin_user: dict = Depends(azure_admin_dependency)):
+async def get_users(admin_user: dict = Depends(require_admin)):
     """Get all users (admin only)"""
     users = await db.users.find({}, {"_id": 0}).to_list(1000)
     
@@ -659,7 +659,7 @@ async def get_users(admin_user: dict = Depends(azure_admin_dependency)):
     return users
 
 @api_router.put("/users/{user_id}")
-async def update_user_role(user_id: str, role: str, admin_user: dict = Depends(azure_admin_dependency)):
+async def update_user_role(user_id: str, role: str, admin_user: dict = Depends(require_admin)):
     """Update user role (admin only)"""
     result = await db.users.update_one({"id": user_id}, {"$set": {"role": role}})
     if result.matched_count == 0:
@@ -667,7 +667,7 @@ async def update_user_role(user_id: str, role: str, admin_user: dict = Depends(a
     return {"message": "User role updated"}
 
 @api_router.delete("/users/{user_id}")
-async def delete_user(user_id: str, admin_user: dict = Depends(azure_admin_dependency)):
+async def delete_user(user_id: str, admin_user: dict = Depends(require_admin)):
     """Delete a user (admin only)"""
     result = await db.users.delete_one({"id": user_id})
     if result.deleted_count == 0:
@@ -708,7 +708,7 @@ class ImportStats(BaseModel):
 @api_router.post("/import/csv", response_model=ImportStats)
 async def import_csv(
     file: UploadFile = File(...),
-    admin_user: dict = Depends(azure_admin_dependency)
+    admin_user: dict = Depends(require_admin)
 ):
     """Import correspondents and mails from CSV (admin only)"""
     import csv
@@ -887,10 +887,10 @@ async def shutdown_db_client():
     client.close()
 
 # Wrapper Azure AD pour les routes
-async def azure_user_dependency(azure_user: AzureUser = Security(azure_scheme)) -> dict:
+async def get_current_user(azure_user: AzureUser = Security(azure_scheme)) -> dict:
     """Wrapper to get user dict from Azure AD"""
     return await get_current_user_azure(azure_user)
 
-async def azure_admin_dependency(current_user: dict = Depends(get_current_user)) -> dict:
+async def require_admin(current_user: dict = Depends(get_current_user)) -> dict:
     """Require admin with Azure AD"""
     return await require_admin_azure(current_user)
