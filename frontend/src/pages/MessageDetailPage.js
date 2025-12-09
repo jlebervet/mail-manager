@@ -389,7 +389,7 @@ const MessageDetailPage = ({ user }) => {
   };
 
   const messageTypeLabels = {
-    message: "📧 Courrier postal",
+    courrier: "📧 Courrier postal",
     email: "💌 Email",
     depot_main_propre: "🤝 Dépôt main propre",
     colis: "📦 Colis"
