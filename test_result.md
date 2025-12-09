@@ -220,6 +220,21 @@ frontend:
         agent: "testing"
         comment: "Fonctionnalité de modification de mot de passe testée avec succès. Tous les points vérifiés : (1) Bouton 'Mot de passe' visible pour chaque utilisateur, (2) Dialogue s'ouvre correctement avec tous les champs requis (nouveau mot de passe, confirmer mot de passe, boutons Mettre à jour et Annuler), (3) Validation fonctionne - message d'erreur affiché pour mots de passe non correspondants, (4) Validation longueur minimum 6 caractères, (5) Message de succès affiché après modification, (6) Nouveau mot de passe fonctionne pour la connexion, (7) Mot de passe peut être réinitialisé. Interface claire et intuitive. Backend endpoint PUT /api/users/{user_id}/password fonctionne correctement."
 
+  - task: "Limitation des droits par service (permissions par service)"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/UserRolesPage.js, /app/backend/server.py, /app/frontend/src/pages/MessagesPage.js, /app/frontend/src/pages/DashboardPage.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "IMPOSSIBLE DE TESTER - Problème d'infrastructure critique : (1) Test demandé sur http://localhost:3333 mais cette URL cause des erreurs CORS car le frontend est configuré pour appeler le backend de production (REACT_APP_BACKEND_URL=https://correspondnow.preview.emergentagent.com), (2) L'URL de production retourne des erreurs 502 (Bad Gateway), (3) Les services backend et frontend sont en cours d'exécution localement mais inaccessibles via les URLs de test. Code examiné : Backend implémente le filtrage par service_id dans /api/mails (lignes 447-448) et /api/stats (lignes 717-718). Frontend a les dropdowns Service dans UserRolesPage.js et affiche les messages dans MessagesPage.js. L'implémentation semble correcte mais nécessite un environnement de test fonctionnel pour validation."
+      - working: "NA"
+        agent: "user"
+        comment: "Demande de test de la fonctionnalité de limitation des droits par service avec scénarios détaillés : (1) Configuration des services utilisateurs, (2) Test de filtrage pour utilisateur avec service, (3) Test admin voit tout, (4) Test utilisateur sans service, (5) Vérification statistiques dashboard, (6) Nettoyage. URL demandée: http://localhost:3333"
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
