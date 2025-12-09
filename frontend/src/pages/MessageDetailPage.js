@@ -10,8 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Badge } from "../components/ui/badge";
 import { Separator } from "../components/ui/separator";
 import { Checkbox } from "../components/ui/checkbox";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "../components/ui/dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, X, Download, Save, Send, Reply, ExternalLink, ScanBarcode, Package } from "lucide-react";
+import { ArrowLeft, Upload, X, Download, Save, Send, Reply, ExternalLink, ScanBarcode, Package, UserPlus } from "lucide-react";
 import { API } from "../App";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
