@@ -433,7 +433,7 @@ async def get_mails(
     service_id: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
-    """Get all mails with optional filters"""
+    """Get all mails with optional filters - users see only their service mails, admins see all"""
     query = {}
     if type:
         query["type"] = type
@@ -441,6 +441,10 @@ async def get_mails(
         query["status"] = status
     if service_id:
         query["service_id"] = service_id
+    
+    # If user is not admin and has a service_id, filter by their service
+    if current_user.get("role") != "admin" and current_user.get("service_id"):
+        query["service_id"] = current_user.get("service_id")
     
     mails = await db.mails.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
     
