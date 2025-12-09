@@ -13,7 +13,7 @@ import jwt
 import base64
 from fastapi_azure_auth import SingleTenantAzureAuthorizationCodeBearer
 from azure_config import settings
-from unified_auth import get_current_user_unified, require_admin_unified
+from azure_auth import get_current_user_azure, require_admin_azure
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
