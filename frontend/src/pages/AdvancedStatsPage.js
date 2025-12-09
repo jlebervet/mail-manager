@@ -68,7 +68,7 @@ const AdvancedStatsPage = ({ user }) => {
 
   const getMessageTypeLabel = (type) => {
     const labels = {
-      courrier: "📧 Message",
+      courrier: "📧 Courrier postal",
       email: "💌 Email",
       depot_main_propre: "🤝 Dépôt main propre",
       colis: "📦 Colis"
