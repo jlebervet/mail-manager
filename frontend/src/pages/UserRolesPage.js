@@ -277,7 +277,7 @@ const UserRolesPage = ({ user }) => {
               <p className="font-medium">Administrateur</p>
               <p className="text-blue-700">
                 Accès complet : gestion des utilisateurs, import CSV, création
-                de services, et toutes les fonctionnalités de l'application.
+                de services, et toutes les fonctionnalités de l'application. Voit tous les messages de tous les services.
               </p>
             </div>
           </div>
@@ -287,8 +287,7 @@ const UserRolesPage = ({ user }) => {
               <p className="font-medium">Utilisateur</p>
               <p className="text-blue-700">
                 Accès standard : consultation et gestion des messages,
-                correspondants et services. Pas d'accès aux fonctions
-                d'administration.
+                correspondants et services. Si un service est assigné, l'utilisateur ne voit que les messages de son service.
               </p>
             </div>
           </div>
@@ -296,6 +295,11 @@ const UserRolesPage = ({ user }) => {
             <p className="text-xs text-amber-900">
               ⚠️ <strong>Note:</strong> Vous ne pouvez pas modifier votre
               propre rôle. Demandez à un autre administrateur si nécessaire.
+            </p>
+          </div>
+          <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <p className="text-xs text-green-900">
+              ℹ️ <strong>Permissions par service:</strong> Assignez un service à un utilisateur pour limiter sa visibilité aux messages de ce service uniquement. Les administrateurs ont toujours accès à tous les messages.
             </p>
           </div>
         </CardContent>
