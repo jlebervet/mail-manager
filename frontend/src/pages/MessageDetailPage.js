@@ -510,6 +510,21 @@ const MessageDetailPage = ({ user }) => {
                       )}
                     </div>
                   )}
+
+                  {/* Checkbox "Ne nécessite pas de réponse" */}
+                  <div className="flex items-center space-x-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <Checkbox
+                      id="no-response-needed"
+                      checked={noResponseNeeded}
+                      onCheckedChange={setNoResponseNeeded}
+                    />
+                    <Label htmlFor="no-response-needed" className="cursor-pointer text-sm">
+                      Ne nécessite pas de réponse
+                      <span className="block text-xs text-slate-600 mt-0.5">
+                        Le message sera automatiquement archivé
+                      </span>
+                    </Label>
+                  </div>
                 </>
               )}
 
