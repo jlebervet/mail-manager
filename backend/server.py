@@ -172,6 +172,7 @@ class MailCreate(BaseModel):
     message_type: str = "courrier"
     is_registered: bool = False
     registered_number: Optional[str] = None
+    no_response_needed: bool = False
 
 class MailUpdate(BaseModel):
     subject: Optional[str] = None
