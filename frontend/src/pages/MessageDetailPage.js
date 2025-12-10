@@ -33,8 +33,7 @@ const MessageDetailPage = ({ user }) => {
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
   const [selectedCorrespondent, setSelectedCorrespondent] = useState(null);
-  const [selectedService, setSelectedService] = useState(null);
-  const [selectedSubService, setSelectedSubService] = useState(null);
+  const [selectedServices, setSelectedServices] = useState([{ service_id: null, sub_service_id: null }]); // Multiple destinataires
   const [status, setStatus] = useState("recu");
   const [comment, setComment] = useState("");
   const [assignedTo, setAssignedTo] = useState(null);
