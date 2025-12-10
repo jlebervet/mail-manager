@@ -769,45 +769,87 @@ const MessageDetailPage = ({ user }) => {
 
               {/* Section Destinataire */}
               <div className="pt-4 border-t">
-                <h3 className="text-lg font-semibold text-slate-900 mb-4">Destinataire</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-slate-900">Destinataire(s)</h3>
+                  {isNew && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addDestinataireField}
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Ajouter un destinataire
+                    </Button>
+                  )}
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Service *</Label>
-                  <Select value={selectedService} onValueChange={setSelectedService} disabled={!isNew}>
-                    <SelectTrigger data-testid="service-select">
-                      <SelectValue placeholder="Sélectionner..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {services.map((service) => (
-                        <SelectItem key={service.id} value={service.id}>
-                          {service.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Liste des destinataires */}
+              <div className="space-y-4">
+                {selectedServices.map((destinataire, index) => (
+                  <div key={index} className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="flex items-start justify-between mb-3">
+                      <span className="text-sm font-medium text-slate-700">
+                        Destinataire {index + 1}
+                      </span>
+                      {isNew && selectedServices.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeDestinataireField(index)}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
 
-                <div>
-                  <Label>Sous-service</Label>
-                  <Select 
-                    value={selectedSubService || ""} 
-                    onValueChange={setSelectedSubService}
-                    disabled={!isNew || !selectedService || subServices.length === 0}
-                  >
-                    <SelectTrigger data-testid="subservice-select">
-                      <SelectValue placeholder="Sélectionner..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {subServices.map((subService) => (
-                        <SelectItem key={subService.id} value={subService.id}>
-                          {subService.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Service *</Label>
+                        <Select 
+                          value={destinataire.service_id || ""} 
+                          onValueChange={(value) => updateDestinataire(index, 'service_id', value)}
+                          disabled={!isNew}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {services.map((service) => (
+                              <SelectItem key={service.id} value={service.id}>
+                                {service.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label>Sous-service</Label>
+                        <Select 
+                          value={destinataire.sub_service_id || ""} 
+                          onValueChange={(value) => updateDestinataire(index, 'sub_service_id', value)}
+                          disabled={!isNew || !destinataire.service_id || getSubServicesForService(destinataire.service_id).length === 0}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {getSubServicesForService(destinataire.service_id).map((subService) => (
+                              <SelectItem key={subService.id} value={subService.id}>
+                                {subService.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
