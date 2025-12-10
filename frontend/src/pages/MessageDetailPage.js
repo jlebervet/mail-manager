@@ -1033,6 +1033,41 @@ const MessageDetailPage = ({ user }) => {
                   <CardTitle className="text-lg">Informations</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
+                  {/* Affichage des destinataires multiples */}
+                  {mail?.service_names && mail.service_names.length > 0 ? (
+                    <>
+                      <div>
+                        <span className="text-slate-600">Destinataire(s):</span>
+                        <div className="mt-1 space-y-1">
+                          {mail.service_names.map((serviceName, idx) => (
+                            <div key={idx} className="flex items-center gap-2">
+                              <span className="inline-block w-2 h-2 bg-blue-500 rounded-full"></span>
+                              <p className="font-medium">{serviceName}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <Separator />
+                    </>
+                  ) : mail?.service_name ? (
+                    <>
+                      <div>
+                        <span className="text-slate-600">Service:</span>
+                        <p className="font-medium">{mail.service_name}</p>
+                        {mail.sub_service_name && (
+                          <p className="text-xs text-slate-500">{mail.sub_service_name}</p>
+                        )}
+                      </div>
+                      <Separator />
+                    </>
+                  ) : null}
+
+                  <div>
+                    <span className="text-slate-600">Correspondant:</span>
+                    <p className="font-medium">{mail?.correspondent_name}</p>
+                  </div>
+                  <Separator />
+
                   {mail?.message_type && (
                     <>
                       <div>
