@@ -134,6 +134,13 @@ const MessageDetailPage = ({ user }) => {
     }
   };
 
+  // Gérer le comportement automatique de "Ne nécessite pas de réponse" pour les colis
+  useEffect(() => {
+    if (messageType === "colis") {
+      setNoResponseNeeded(true);
+    }
+  }, [messageType]);
+
   const searchCorrespondents = async (search) => {
     try {
       const response = await axios.get(`${API}/correspondents`, {
