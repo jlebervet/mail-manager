@@ -442,9 +442,6 @@ const MessageDetailPage = ({ user }) => {
     }
   };
 
-  const selectedServiceData = services.find(s => s.id === selectedService);
-  const subServices = selectedServiceData?.sub_services || [];
-
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
