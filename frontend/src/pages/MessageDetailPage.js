@@ -110,8 +110,20 @@ const MessageDetailPage = ({ user }) => {
         name: mailData.correspondent_name
       });
       
-      setSelectedService(mailData.service_id);
-      setSelectedSubService(mailData.sub_service_id);
+      // Charger les destinataires multiples ou un seul
+      if (mailData.service_ids && mailData.service_ids.length > 0) {
+        const servicesData = mailData.service_ids.map((sid, idx) => ({
+          service_id: sid,
+          sub_service_id: idx === 0 ? mailData.sub_service_id : null
+        }));
+        setSelectedServices(servicesData);
+      } else {
+        // Compatibilité avec l'ancien format
+        setSelectedServices([{
+          service_id: mailData.service_id,
+          sub_service_id: mailData.sub_service_id
+        }]);
+      }
       
       if (mailData.assigned_to_id) {
         setAssignedTo(mailData.assigned_to_id);
