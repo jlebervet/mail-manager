@@ -78,8 +78,10 @@ const MessageDetailPage = ({ user }) => {
           id: parsed.correspondent_id,
           name: parsed.correspondent_name
         });
-        setSelectedService(parsed.service_id);
-        setSelectedSubService(parsed.sub_service_id);
+        setSelectedServices([{
+          service_id: parsed.service_id,
+          sub_service_id: parsed.sub_service_id
+        }]);
       }
     }
   }, [id]);
