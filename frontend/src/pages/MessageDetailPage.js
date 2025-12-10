@@ -297,6 +297,33 @@ const MessageDetailPage = ({ user }) => {
     navigate(`/message/new/${replyType}`);
   };
 
+  // Fonctions pour gérer les destinataires multiples
+  const addDestinataireField = () => {
+    setSelectedServices([...selectedServices, { service_id: null, sub_service_id: null }]);
+  };
+
+  const removeDestinataireField = (index) => {
+    if (selectedServices.length > 1) {
+      const newServices = selectedServices.filter((_, i) => i !== index);
+      setSelectedServices(newServices);
+    }
+  };
+
+  const updateDestinataire = (index, field, value) => {
+    const newServices = [...selectedServices];
+    newServices[index][field] = value;
+    // Reset sub_service when service changes
+    if (field === 'service_id') {
+      newServices[index]['sub_service_id'] = null;
+    }
+    setSelectedServices(newServices);
+  };
+
+  const getSubServicesForService = (serviceId) => {
+    const service = services.find(s => s.id === serviceId);
+    return service?.sub_services || [];
+  };
+
   const handleSave = async () => {
     if (!subject || !content || !selectedCorrespondent || !selectedService) {
       toast.error("Veuillez remplir tous les champs obligatoires");
