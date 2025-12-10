@@ -104,6 +104,7 @@ const MessageDetailPage = ({ user }) => {
       setMessageType(mailData.message_type || "courrier");
       setIsRegistered(mailData.is_registered || false);
       setRegisteredNumber(mailData.registered_number || "");
+      setNoResponseNeeded(mailData.no_response_needed || false);
       
       setSelectedCorrespondent({
         id: mailData.correspondent_id,
