@@ -460,7 +460,8 @@ const MessageDetailPage = ({ user }) => {
                       <SelectContent>
                         <SelectItem value="courrier">📧 Courrier postal</SelectItem>
                         <SelectItem value="email">💌 Email</SelectItem>
-                        <SelectItem value="depot_main_propre">🤝 Dépôt main propre</SelectItem>
+                        <SelectItem value="accueil_physique">🤝 Accueil Physique</SelectItem>
+                        <SelectItem value="accueil_telephonique">📞 Accueil Téléphonique</SelectItem>
                         <SelectItem value="colis">📦 Colis</SelectItem>
                       </SelectContent>
                     </Select>
