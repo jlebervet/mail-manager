@@ -709,6 +709,11 @@ const MessageDetailPage = ({ user }) => {
                 </div>
               </div>
 
+              {/* Section Destinataire */}
+              <div className="pt-4 border-t">
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">Destinataire</h3>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Service *</Label>
