@@ -536,14 +536,19 @@ async def create_mail(mail_create: MailCreate, current_user: dict = Depends(get_
     count = await db.mails.count_documents({})
     reference = f"MAIL-{datetime.now(timezone.utc).year}-{count + 1:05d}"
     
+    # Determine initial status based on no_response_needed
+    initial_status = "archive" if mail_create.no_response_needed else "recu"
+    
     mail = Mail(
         **mail_create.model_dump(),
         reference=reference,
+        status=initial_status,
         workflow=[
             WorkflowStep(
-                status="recu",
+                status=initial_status,
                 user_id=current_user['sub'],
-                user_name=current_user['name']
+                user_name=current_user['name'],
+                comment="Archivé automatiquement - ne nécessite pas de réponse" if mail_create.no_response_needed else None
             )
         ]
     )
