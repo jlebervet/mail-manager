@@ -135,8 +135,10 @@ class Mail(BaseModel):
     content: str
     correspondent_id: str
     correspondent_name: str
-    service_id: str
-    service_name: str
+    service_id: str  # Primary service (pour compatibilité)
+    service_name: str  # Primary service name (pour compatibilité)
+    service_ids: Optional[List[str]] = None  # Multiple destinataires
+    service_names: Optional[List[str]] = None  # Multiple destinataires names
     sub_service_id: Optional[str] = None
     sub_service_name: Optional[str] = None
     assigned_to_id: Optional[str] = None
