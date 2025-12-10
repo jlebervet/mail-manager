@@ -450,8 +450,13 @@ async def get_mails(
         query["service_id"] = service_id
     
     # If user is not admin and has a service_id, filter by their service
+    # Check both service_id (single) and service_ids (multiple) for backward compatibility
     if current_user.get("role") != "admin" and current_user.get("service_id"):
-        query["service_id"] = current_user.get("service_id")
+        user_service = current_user.get("service_id")
+        query["$or"] = [
+            {"service_id": user_service},
+            {"service_ids": user_service}
+        ]
     
     mails = await db.mails.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
     
