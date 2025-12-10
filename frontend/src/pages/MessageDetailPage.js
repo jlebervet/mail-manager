@@ -44,6 +44,7 @@ const MessageDetailPage = ({ user }) => {
   const [isRegistered, setIsRegistered] = useState(false);
   const [registeredNumber, setRegisteredNumber] = useState("");
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [noResponseNeeded, setNoResponseNeeded] = useState(false);
   
   const [correspondents, setCorrespondents] = useState([]);
   const [services, setServices] = useState([]);
