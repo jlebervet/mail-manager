@@ -152,9 +152,10 @@ class Mail(BaseModel):
     parent_mail_reference: Optional[str] = None
     related_mails: List[dict] = []  # List of related mails (responses)
     # New fields
-    message_type: str = "courrier"  # "courrier", "email", "depot_main_propre", "colis"
+    message_type: str = "courrier"  # "courrier", "email", "accueil_physique", "accueil_telephonique", "colis"
     is_registered: bool = False  # Recommandé
     registered_number: Optional[str] = None  # Numéro de recommandé ou code-barres
+    no_response_needed: bool = False  # Ne nécessite pas de réponse
 
 class MailCreate(BaseModel):
     type: str
