@@ -325,8 +325,15 @@ const MessageDetailPage = ({ user }) => {
   };
 
   const handleSave = async () => {
-    if (!subject || !content || !selectedCorrespondent || !selectedService) {
+    if (!subject || !content || !selectedCorrespondent) {
       toast.error("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
+
+    // Vérifier qu'au moins un service est sélectionné
+    const hasValidService = selectedServices.some(s => s.service_id !== null);
+    if (!hasValidService) {
+      toast.error("Veuillez sélectionner au moins un destinataire (service)");
       return;
     }
 
@@ -338,10 +345,20 @@ const MessageDetailPage = ({ user }) => {
     try {
       setLoading(true);
       
-      const serviceData = services.find(s => s.id === selectedService);
-      const subServiceData = selectedSubService 
-        ? serviceData?.sub_services.find(ss => ss.id === selectedSubService)
+      // Préparer les données des services multiples
+      const validServices = selectedServices.filter(s => s.service_id !== null);
+      const primaryService = validServices[0];
+      const serviceData = services.find(s => s.id === primaryService.service_id);
+      const subServiceData = primaryService.sub_service_id
+        ? serviceData?.sub_services.find(ss => ss.id === primaryService.sub_service_id)
         : null;
+
+      // Collecter tous les service_ids et service_names
+      const service_ids = validServices.map(s => s.service_id);
+      const service_names = validServices.map(s => {
+        const svc = services.find(srv => srv.id === s.service_id);
+        return svc?.name || "";
+      });
 
       if (isNew) {
         const replyData = sessionStorage.getItem('replyToMail');
@@ -361,9 +378,11 @@ const MessageDetailPage = ({ user }) => {
           content,
           correspondent_id: selectedCorrespondent.id,
           correspondent_name: selectedCorrespondent.name,
-          service_id: selectedService,
+          service_id: primaryService.service_id,  // Primary service pour compatibilité
           service_name: serviceData?.name || "",
-          sub_service_id: selectedSubService,
+          service_ids: service_ids,  // Tous les destinataires
+          service_names: service_names,  // Tous les noms
+          sub_service_id: primaryService.sub_service_id,
           sub_service_name: subServiceData?.name || null,
           parent_mail_id: parentMailId,
           parent_mail_reference: parentMailReference,
