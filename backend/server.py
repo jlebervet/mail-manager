@@ -799,7 +799,7 @@ async def get_advanced_stats(
     
     # Get statistics by message type
     message_type_counts = {}
-    for msg_type in ["courrier", "email", "depot_main_propre", "colis"]:
+    for msg_type in ["courrier", "email", "accueil_physique", "accueil_telephonique", "colis"]:
         type_query = {**query, "message_type": msg_type}
         message_type_counts[msg_type] = await db.mails.count_documents(type_query)
     
