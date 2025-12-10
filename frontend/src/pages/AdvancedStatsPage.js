@@ -70,7 +70,8 @@ const AdvancedStatsPage = ({ user }) => {
     const labels = {
       courrier: "📧 Courrier postal",
       email: "💌 Email",
-      depot_main_propre: "🤝 Dépôt main propre",
+      accueil_physique: "🤝 Accueil Physique",
+      accueil_telephonique: "📞 Accueil Téléphonique",
       colis: "📦 Colis"
     };
     return labels[type] || type;
