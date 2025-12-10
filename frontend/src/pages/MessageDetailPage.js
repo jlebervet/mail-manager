@@ -343,7 +343,8 @@ const MessageDetailPage = ({ user }) => {
           parent_mail_reference: parentMailReference,
           message_type: messageType,
           is_registered: isRegistered,
-          registered_number: isRegistered ? registeredNumber : null
+          registered_number: isRegistered ? registeredNumber : null,
+          no_response_needed: noResponseNeeded
         };
         
         const response = await axios.post(`${API}/mails`, mailData);
