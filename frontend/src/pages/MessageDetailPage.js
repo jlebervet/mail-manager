@@ -1007,13 +1007,23 @@ const MessageDetailPage = ({ user }) => {
                         <SelectValue placeholder="Sélectionner..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {users.map((u) => (
+                        {getAssignableUsers().map((u) => (
                           <SelectItem key={u.id} value={u.id}>
                             {u.name}
+                            {u.service_id && (
+                              <span className="text-xs text-slate-500 ml-2">
+                                ({services.find(s => s.id === u.service_id)?.name || ''})
+                              </span>
+                            )}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                    {getAssignableUsers().length === 0 && (
+                      <p className="text-xs text-amber-600 mt-1">
+                        Aucun utilisateur disponible pour ce service
+                      </p>
+                    )}
                   </div>
 
                   <div>
