@@ -700,6 +700,17 @@ async def get_users(admin_user: dict = Depends(require_admin)):
     
     return users
 
+@api_router.get("/users/by-service/{service_id}", response_model=List[User])
+async def get_users_by_service(service_id: str, current_user: dict = Depends(get_current_user)):
+    """Get users by service"""
+    users = await db.users.find({"service_id": service_id}, {"_id": 0}).to_list(1000)
+    
+    for user in users:
+        if isinstance(user.get('created_at'), str):
+            user['created_at'] = datetime.fromisoformat(user['created_at'])
+    
+    return users
+
 @api_router.put("/users/{user_id}")
 async def update_user_role(user_id: str, role: str, admin_user: dict = Depends(require_admin)):
     """Update user role (admin only)"""
