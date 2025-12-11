@@ -679,7 +679,7 @@ const MessageDetailPage = ({ user }) => {
                         variant="outline"
                         role="combobox"
                         className="flex-1 justify-between"
-                        disabled={!isNew}
+                        disabled={!isNew && user?.role !== "admin"}
                       >
                         {selectedCorrespondent ? selectedCorrespondent.name : "Sélectionner un correspondant..."}
                       </Button>
