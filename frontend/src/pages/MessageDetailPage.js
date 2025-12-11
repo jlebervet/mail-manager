@@ -1098,9 +1098,14 @@ const MessageDetailPage = ({ user }) => {
                         <span className="text-slate-600">Destinataire(s):</span>
                         <div className="mt-1 space-y-1">
                           {mail.service_names.map((serviceName, idx) => (
-                            <div key={idx} className="flex items-center gap-2">
-                              <span className="inline-block w-2 h-2 bg-blue-500 rounded-full"></span>
-                              <p className="font-medium">{serviceName}</p>
+                            <div key={idx} className="flex items-start gap-2">
+                              <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mt-1.5"></span>
+                              <div>
+                                <p className="font-medium">{serviceName}</p>
+                                {mail.sub_service_names && mail.sub_service_names[idx] && (
+                                  <p className="text-xs text-slate-500 ml-0">{mail.sub_service_names[idx]}</p>
+                                )}
+                              </div>
                             </div>
                           ))}
                         </div>
