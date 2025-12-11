@@ -183,6 +183,22 @@ const MessageDetailPage = ({ user }) => {
     }
   };
 
+  // Filtrer les utilisateurs assignables selon les services du message
+  const getAssignableUsers = () => {
+    if (!mail || !users.length) return users;
+    
+    // Si le message a des destinataires multiples, utiliser service_ids
+    const messageServices = mail.service_ids || [mail.service_id];
+    
+    // Filtrer les utilisateurs qui appartiennent à un des services du message
+    return users.filter(u => {
+      // Admins peuvent toujours être assignés
+      if (u.role === "admin") return true;
+      // Utilisateurs du même service
+      return messageServices.includes(u.service_id);
+    });
+  };
+
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
     files.forEach(uploadFile);
