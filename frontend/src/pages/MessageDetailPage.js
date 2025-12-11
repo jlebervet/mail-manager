@@ -419,8 +419,10 @@ const MessageDetailPage = ({ user }) => {
           service_name: serviceData?.name || "",
           service_ids: service_ids,  // Tous les destinataires
           service_names: service_names,  // Tous les noms
-          sub_service_id: primaryService.sub_service_id,
-          sub_service_name: subServiceData?.name || null,
+          sub_service_id: primaryService.sub_service_id,  // Primary sub-service
+          sub_service_name: subServiceData?.name || null,  // Primary sub-service name
+          sub_service_ids: sub_service_ids,  // Tous les sous-services
+          sub_service_names: sub_service_names,  // Tous les noms de sous-services
           parent_mail_id: parentMailId,
           parent_mail_reference: parentMailReference,
           message_type: messageType,
