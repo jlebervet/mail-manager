@@ -742,7 +742,7 @@ const MessageDetailPage = ({ user }) => {
                         type="button"
                         variant="outline"
                         size="icon"
-                        disabled={!isNew}
+                        disabled={!isNew && user?.role !== "admin"}
                         data-testid="new-correspondent-button"
                         title="Créer un nouveau correspondant"
                       >
