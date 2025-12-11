@@ -60,6 +60,7 @@ class User(BaseModel):
     password: str  # In production, this would be hashed
     role: str = "user"  # "user" or "admin"
     service_id: Optional[str] = None  # Service assigned to user for permissions
+    sub_service_id: Optional[str] = None  # Sub-service assigned to user
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class UserCreate(BaseModel):
@@ -68,6 +69,7 @@ class UserCreate(BaseModel):
     password: str
     role: str = "user"
     service_id: Optional[str] = None
+    sub_service_id: Optional[str] = None
 
 class LoginRequest(BaseModel):
     email: str
