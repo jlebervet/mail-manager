@@ -445,9 +445,43 @@ const MessageDetailPage = ({ user }) => {
         toast.success("Message créé avec succès");
         navigate(`/message/${newMailId}`);
       } else {
+        // Mode modification - Permettre la modification de tous les champs
+        const validServices = selectedServices.filter(s => s.service_id !== null);
+        const primaryService = validServices[0];
+        const serviceData = services.find(s => s.id === primaryService.service_id);
+        const subServiceData = primaryService.sub_service_id
+          ? serviceData?.sub_services.find(ss => ss.id === primaryService.sub_service_id)
+          : null;
+
+        const service_ids = validServices.map(s => s.service_id);
+        const service_names = validServices.map(s => {
+          const svc = services.find(srv => srv.id === s.service_id);
+          return svc?.name || "";
+        });
+        const sub_service_ids = validServices.map(s => s.sub_service_id || null);
+        const sub_service_names = validServices.map(s => {
+          if (!s.sub_service_id) return null;
+          const svc = services.find(srv => srv.id === s.service_id);
+          const subSvc = svc?.sub_services.find(ss => ss.id === s.sub_service_id);
+          return subSvc?.name || null;
+        });
+
         const updateData = {
           subject,
           content,
+          correspondent_id: selectedCorrespondent.id,
+          correspondent_name: selectedCorrespondent.name,
+          service_id: primaryService.service_id,
+          service_name: serviceData?.name || "",
+          service_ids: service_ids,
+          service_names: service_names,
+          sub_service_id: primaryService.sub_service_id,
+          sub_service_name: subServiceData?.name || null,
+          sub_service_ids: sub_service_ids,
+          sub_service_names: sub_service_names,
+          message_type: messageType,
+          is_registered: isRegistered,
+          registered_number: isRegistered ? registeredNumber : null,
           status,
           assigned_to_id: assignedTo,
           assigned_to_name: users.find(u => u.id === assignedTo)?.name || null,
