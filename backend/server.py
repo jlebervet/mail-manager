@@ -187,6 +187,19 @@ class MailCreate(BaseModel):
 class MailUpdate(BaseModel):
     subject: Optional[str] = None
     content: Optional[str] = None
+    correspondent_id: Optional[str] = None
+    correspondent_name: Optional[str] = None
+    service_id: Optional[str] = None
+    service_name: Optional[str] = None
+    service_ids: Optional[List[str]] = None
+    service_names: Optional[List[str]] = None
+    sub_service_id: Optional[str] = None
+    sub_service_name: Optional[str] = None
+    sub_service_ids: Optional[List[str]] = None
+    sub_service_names: Optional[List[str]] = None
+    message_type: Optional[str] = None
+    is_registered: Optional[bool] = None
+    registered_number: Optional[str] = None
     status: Optional[str] = None
     assigned_to_id: Optional[str] = None
     assigned_to_name: Optional[str] = None
