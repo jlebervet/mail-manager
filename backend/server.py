@@ -724,11 +724,16 @@ async def update_user_password(user_id: str, password_update: PasswordUpdate, ad
 
 class ServiceAssignment(BaseModel):
     service_id: Optional[str] = None
+    sub_service_id: Optional[str] = None
 
 @api_router.put("/users/{user_id}/service")
 async def update_user_service(user_id: str, service_assignment: ServiceAssignment, admin_user: dict = Depends(require_admin)):
-    """Update user service (admin only)"""
-    result = await db.users.update_one({"id": user_id}, {"$set": {"service_id": service_assignment.service_id}})
+    """Update user service and sub-service (admin only)"""
+    update_data = {
+        "service_id": service_assignment.service_id,
+        "sub_service_id": service_assignment.sub_service_id
+    }
+    result = await db.users.update_one({"id": user_id}, {"$set": update_data})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "Service utilisateur mis à jour avec succès"}
