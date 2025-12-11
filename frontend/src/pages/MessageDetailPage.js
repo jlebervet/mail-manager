@@ -871,7 +871,7 @@ const MessageDetailPage = ({ user }) => {
                         <Select 
                           value={destinataire.service_id || ""} 
                           onValueChange={(value) => updateDestinataire(index, 'service_id', value)}
-                          disabled={!isNew}
+                          disabled={!isNew && user?.role !== "admin"}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Sélectionner..." />
@@ -891,7 +891,7 @@ const MessageDetailPage = ({ user }) => {
                         <Select 
                           value={destinataire.sub_service_id || ""} 
                           onValueChange={(value) => updateDestinataire(index, 'sub_service_id', value)}
-                          disabled={!isNew || !destinataire.service_id || getSubServicesForService(destinataire.service_id).length === 0}
+                          disabled={(!isNew && user?.role !== "admin") || !destinataire.service_id || getSubServicesForService(destinataire.service_id).length === 0}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Sélectionner..." />
