@@ -383,11 +383,18 @@ const MessageDetailPage = ({ user }) => {
         ? serviceData?.sub_services.find(ss => ss.id === primaryService.sub_service_id)
         : null;
 
-      // Collecter tous les service_ids et service_names
+      // Collecter tous les service_ids, service_names, sub_service_ids, sub_service_names
       const service_ids = validServices.map(s => s.service_id);
       const service_names = validServices.map(s => {
         const svc = services.find(srv => srv.id === s.service_id);
         return svc?.name || "";
+      });
+      const sub_service_ids = validServices.map(s => s.sub_service_id || null);
+      const sub_service_names = validServices.map(s => {
+        if (!s.sub_service_id) return null;
+        const svc = services.find(srv => srv.id === s.service_id);
+        const subSvc = svc?.sub_services.find(ss => ss.id === s.sub_service_id);
+        return subSvc?.name || null;
       });
 
       if (isNew) {
