@@ -173,8 +173,10 @@ class MailCreate(BaseModel):
     service_name: str  # Primary service name (pour compatibilité)
     service_ids: Optional[List[str]] = None  # Multiple destinataires
     service_names: Optional[List[str]] = None  # Multiple destinataires names
-    sub_service_id: Optional[str] = None
-    sub_service_name: Optional[str] = None
+    sub_service_id: Optional[str] = None  # Primary sub-service (pour compatibilité)
+    sub_service_name: Optional[str] = None  # Primary sub-service name (pour compatibilité)
+    sub_service_ids: Optional[List[str]] = None  # Multiple sous-services
+    sub_service_names: Optional[List[str]] = None  # Multiple sous-services names
     parent_mail_id: Optional[str] = None
     parent_mail_reference: Optional[str] = None
     message_type: str = "courrier"
