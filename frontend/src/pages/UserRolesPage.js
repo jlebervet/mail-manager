@@ -109,7 +109,8 @@ const UserRolesPage = ({ user }) => {
   const handleServiceChange = async (userId, userName, serviceId) => {
     try {
       await axios.put(`${API}/users/${userId}/service`, {
-        service_id: serviceId || null
+        service_id: serviceId || null,
+        sub_service_id: null  // Reset sub-service quand le service change
       });
       toast.success(`Service mis à jour pour ${userName}`);
       fetchUsers();
@@ -117,6 +118,26 @@ const UserRolesPage = ({ user }) => {
       console.error("Error updating service:", error);
       toast.error("Erreur lors de la mise à jour du service");
     }
+  };
+
+  const handleSubServiceChange = async (userId, userName, subServiceId) => {
+    try {
+      const userToUpdate = users.find(u => u.id === userId);
+      await axios.put(`${API}/users/${userId}/service`, {
+        service_id: userToUpdate.service_id,
+        sub_service_id: subServiceId || null
+      });
+      toast.success(`Sous-service mis à jour pour ${userName}`);
+      fetchUsers();
+    } catch (error) {
+      console.error("Error updating sub-service:", error);
+      toast.error("Erreur lors de la mise à jour du sous-service");
+    }
+  };
+
+  const getSubServicesForService = (serviceId) => {
+    const service = services.find(s => s.id === serviceId);
+    return service?.sub_services || [];
   };
 
   const getRoleBadge = (role) => {
