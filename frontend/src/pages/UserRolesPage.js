@@ -261,6 +261,31 @@ const UserRolesPage = ({ user }) => {
                     </Select>
                   </div>
 
+                  {/* Sous-service dropdown (si service sélectionné) */}
+                  {u.service_id && getSubServicesForService(u.service_id).length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-slate-600">Sous-service:</span>
+                      <Select
+                        value={u.sub_service_id || "none"}
+                        onValueChange={(value) =>
+                          handleSubServiceChange(u.id, u.name, value === "none" ? null : value)
+                        }
+                      >
+                        <SelectTrigger className="w-48">
+                          <SelectValue placeholder="Aucun" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Aucun</SelectItem>
+                          {getSubServicesForService(u.service_id).map((subService) => (
+                            <SelectItem key={subService.id} value={subService.id}>
+                              {subService.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
                   <Button
                     variant="outline"
                     size="sm"
