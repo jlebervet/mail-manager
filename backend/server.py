@@ -282,11 +282,26 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
     """Get current user information"""
     return current_user
 
+class AzureLoginRequest(BaseModel):
+    oid: str
+    email: str
+    name: str
+
+@api_router.post("/auth/azure/login")
+async def azure_login(login_data: AzureLoginRequest, azure_user = Security(azure_scheme)):
+    """
+    Endpoint appelé après connexion Azure AD réussie
+    Crée l'utilisateur dans MongoDB s'il n'existe pas
+    """
+    from auth_dependencies import get_or_create_user_from_azure
+    user_info = await get_or_create_user_from_azure(azure_user, db)
+    return user_info
+
 @api_router.get("/auth/me/azure")
 async def get_azure_user_info(azure_user = Security(azure_scheme)):
     """Get current Azure AD authenticated user information"""
     from auth_dependencies import get_or_create_user_from_azure
-    user_info = await get_or_create_user_from_azure(azure_user)
+    user_info = await get_or_create_user_from_azure(azure_user, db)
     return user_info
 
 @api_router.post("/auth/register", response_model=User)
