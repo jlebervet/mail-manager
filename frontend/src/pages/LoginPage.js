@@ -1,116 +1,106 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
+import { useMsal } from "@azure/msal-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Building2, LogIn, AlertCircle } from "lucide-react";
+import { loginRequest } from "../authConfig";
 import { toast } from "sonner";
-import { Mail, Lock, Building2 } from "lucide-react";
-import { API } from "../App";
 
-const LoginPage = ({ onLogin }) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+const LoginPage = () => {
+  const { instance, inProgress } = useMsal();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleLogin = async () => {
+    if (inProgress !== "none") {
+      return;
+    }
 
+    setIsLoading(true);
+    
     try {
-      const response = await axios.post(`${API}/auth/login`, {
-        email,
-        password,
-      });
-
-      onLogin(response.data.token, response.data.user);
-      toast.success("Connexion réussie !");
-      navigate("/");
+      const response = await instance.loginPopup(loginRequest);
+      
+      if (response && response.account) {
+        instance.setActiveAccount(response.account);
+        toast.success("Connexion réussie !");
+      }
     } catch (error) {
-      console.error("Login error:", error);
-      toast.error("Identifiants invalides");
+      console.error("Erreur de connexion:", error);
+      
+      if (error.errorCode === "user_cancelled") {
+        toast.error("Connexion annulée");
+      } else if (error.errorCode === "interaction_in_progress") {
+        toast.error("Une connexion est déjà en cours");
+      } else {
+        toast.error("Erreur lors de la connexion : " + (error.errorMessage || error.message));
+      }
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8 fade-in">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4 shadow-lg">
-            <Building2 className="w-8 h-8 text-white" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100">
+      <div className="w-full max-w-md p-6">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4">
+            <Building2 className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Gestion de Messages</h1>
-          <p className="text-slate-600">Système Multi-Services</p>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">
+            Gestion de Messages
+          </h1>
+          <p className="text-slate-600">
+            Système Multi-Services
+          </p>
         </div>
 
-        <Card className="shadow-xl border-0 fade-in">
-          <CardHeader className="space-y-1">
+        <Card className="border-0 shadow-xl">
+          <CardHeader className="text-center pb-4">
             <CardTitle className="text-2xl">Connexion</CardTitle>
             <CardDescription>
-              Entrez vos identifiants pour accéder à l'application
+              Connectez-vous avec votre compte Microsoft pour accéder à l'application
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                  <Input
-                    id="email"
-                    data-testid="login-email-input"
-                    type="email"
-                    placeholder="nom@exemple.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="pl-10"
-                  />
-                </div>
-              </div>
+          <CardContent className="space-y-4">
+            <Button
+              onClick={handleLogin}
+              disabled={isLoading || inProgress !== "none"}
+              className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700"
+            >
+              {isLoading || inProgress !== "none" ? (
+                <>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Connexion en cours...
+                </>
+              ) : (
+                <>
+                  <LogIn className="mr-2 h-5 w-5" />
+                  Se connecter avec Microsoft
+                </>
+              )}
+            </Button>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Mot de passe</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                  <Input
-                    id="password"
-                    data-testid="login-password-input"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="pl-10"
-                  />
-                </div>
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200"></div>
               </div>
-
-              <Button
-                type="submit"
-                data-testid="login-submit-button"
-                className="w-full bg-blue-600 hover:bg-blue-700"
-                disabled={loading}
-              >
-                {loading ? "Connexion..." : "Se connecter"}
-              </Button>
-            </form>
-
-            <div className="mt-6 p-4 bg-slate-50 rounded-lg">
-              <p className="text-xs text-slate-600 font-medium mb-2">Comptes de démonstration :</p>
-              <div className="text-xs text-slate-500 space-y-1">
-                <p><strong>Admin:</strong> admin@mairie.fr / admin123</p>
-                <p><strong>User:</strong> user@mairie.fr / user123</p>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-white px-4 text-slate-500">
+                  Authentification sécurisée
+                </span>
               </div>
+            </div>
+
+            <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-blue-900">
+                Utilisez vos identifiants Microsoft de votre organisation pour vous connecter.
+              </p>
             </div>
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-slate-500 mt-6">
+        <p className="text-center text-sm text-slate-500 mt-6">
           Système de gestion de messages multi-services
         </p>
       </div>
