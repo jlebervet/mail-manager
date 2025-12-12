@@ -1077,9 +1077,12 @@ async def shutdown_db_client():
 
 # Wrapper Azure AD pour les routes
 async def get_current_user(azure_user: AzureUser = Security(azure_scheme)) -> dict:
-    """Wrapper to get user dict from Azure AD"""
-    return await get_current_user_azure(azure_user)
+    """Wrapper to get user dict from Azure AD and create/update in database"""
+    from auth_dependencies import get_or_create_user_from_azure
+    user_info = await get_or_create_user_from_azure(azure_user, db)
+    return user_info
 
 async def require_admin(current_user: dict = Depends(get_current_user)) -> dict:
     """Require admin with Azure AD"""
+    from auth_dependencies import require_admin_azure
     return await require_admin_azure(current_user)
