@@ -57,19 +57,22 @@ class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     email: str
     name: str
-    password: str  # In production, this would be hashed
+    password: Optional[str] = None  # Optional pour les utilisateurs Azure AD
     role: str = "user"  # "user" or "admin"
     service_id: Optional[str] = None  # Service assigned to user for permissions
     sub_service_id: Optional[str] = None  # Sub-service assigned to user
+    azure_id: Optional[str] = None  # Azure AD Object ID
+    last_login: Optional[str] = None  # Dernière connexion
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class UserCreate(BaseModel):
     email: str
     name: str
-    password: str
+    password: Optional[str] = None  # Optional pour les utilisateurs Azure AD
     role: str = "user"
     service_id: Optional[str] = None
     sub_service_id: Optional[str] = None
+    azure_id: Optional[str] = None
 
 class LoginRequest(BaseModel):
     email: str
