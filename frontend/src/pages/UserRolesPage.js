@@ -142,6 +142,36 @@ const UserRolesPage = ({ user }) => {
     return service?.sub_services || [];
   };
 
+  const handleDeleteUser = (userId, userName, userEmail) => {
+    setUserToDelete({ id: userId, name: userName, email: userEmail });
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteUser = async () => {
+    try {
+      const response = await axios.delete(`${API}/users/${userToDelete.id}`);
+      
+      toast.success(
+        `Utilisateur ${userToDelete.email} anonymisé avec succès (RGPD)`,
+        { duration: 5000 }
+      );
+      
+      if (response.data.messages_preserved > 0) {
+        toast.info(
+          `${response.data.messages_preserved} message(s) conservé(s) dans l'historique`,
+          { duration: 4000 }
+        );
+      }
+      
+      fetchUsers();
+      setShowDeleteDialog(false);
+      setUserToDelete(null);
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast.error(error.response?.data?.detail || "Erreur lors de la suppression");
+    }
+  };
+
   const getRoleBadge = (role) => {
     if (role === "admin") {
       return (
@@ -160,6 +190,8 @@ const UserRolesPage = ({ user }) => {
   };
 
   const isCurrentUser = (userId) => userId === user?.id;
+
+  const isDeletedUser = (userObj) => userObj?.is_deleted === true || userObj?.email?.includes('anonyme_');
 
   const getServiceName = (serviceId) => {
     if (!serviceId) return "Aucun service";
