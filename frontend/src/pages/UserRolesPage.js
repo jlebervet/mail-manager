@@ -514,6 +514,66 @@ const UserRolesPage = ({ user }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete User Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent className="max-w-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="h-5 w-5" />
+              Supprimer l'utilisateur (RGPD)
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>
+                Vous êtes sur le point de <strong>supprimer définitivement</strong> l'utilisateur :
+              </p>
+              <div className="p-3 bg-slate-100 rounded-lg">
+                <p className="font-medium text-slate-900">{userToDelete?.name}</p>
+                <p className="text-sm text-slate-600">{userToDelete?.email}</p>
+              </div>
+              
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg space-y-2">
+                <p className="font-medium text-amber-900 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  Conformité RGPD
+                </p>
+                <p className="text-sm text-amber-800">
+                  Cette action va <strong>anonymiser</strong> toutes les données personnelles de l'utilisateur :
+                </p>
+                <ul className="text-sm text-amber-800 ml-4 list-disc space-y-1">
+                  <li>Email → anonyme_xxxxx@supprime.rgpd</li>
+                  <li>Nom → "Utilisateur Supprimé (RGPD)"</li>
+                  <li>Mot de passe et identifiants Microsoft supprimés</li>
+                  <li>Rôle et services retirés</li>
+                </ul>
+              </div>
+
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="font-medium text-blue-900 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  Conservation de l'historique
+                </p>
+                <p className="text-sm text-blue-800">
+                  Les messages créés, ouverts ou assignés à cet utilisateur seront <strong>conservés</strong> dans l'historique avec la mention "Utilisateur Supprimé (RGPD)".
+                </p>
+              </div>
+
+              <p className="text-red-600 font-medium pt-2">
+                ⚠️ Cette action est irréversible !
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteUser}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Confirmer la suppression
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
