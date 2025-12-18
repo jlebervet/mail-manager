@@ -75,15 +75,20 @@ function App() {
         try {
           const account = accounts[0];
           
-          // Appeler le backend pour créer/récupérer l'utilisateur
-          const response = await axios.post(`${API}/auth/azure/login`, {
+          // Appeler le backend pour créer/récupérer l'utilisateur (endpoint NON protégé)
+          const response = await axios.post(`${API}/auth/azure/callback`, {
             oid: account.localAccountId,
             email: account.username,
             name: account.name,
           });
           
-          setUser(response.data);
-          localStorage.setItem("user", JSON.stringify(response.data));
+          // Stocker le token JWT retourné pour les requêtes suivantes
+          if (response.data.token) {
+            localStorage.setItem("token", response.data.token);
+          }
+          
+          setUser(response.data.user);
+          localStorage.setItem("user", JSON.stringify(response.data.user));
         } catch (error) {
           console.error("Erreur lors de la récupération des informations utilisateur:", error);
         }
