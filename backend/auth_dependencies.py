@@ -30,6 +30,7 @@ azure_scheme = SingleTenantAzureAuthorizationCodeBearer(
 async def get_or_create_user_from_azure(azure_user: AzureUser, db: AsyncIOMotorDatabase) -> dict:
     """
     Récupère ou crée un utilisateur basé sur les informations Azure AD
+    Si un utilisateur avec le même email existe déjà, lie le compte Azure AD
     
     Args:
         azure_user: Objet utilisateur Azure AD
@@ -46,36 +47,56 @@ async def get_or_create_user_from_azure(azure_user: AzureUser, db: AsyncIOMotorD
         
         logger.info(f"Tentative de connexion pour: {email} (Azure ID: {azure_id})")
         
-        # Chercher l'utilisateur existant par Azure ID
-        existing_user = await db.users.find_one({"azure_id": azure_id}, {"_id": 0})
+        # Chercher l'utilisateur existant par Azure ID OU par email
+        existing_user = await db.users.find_one(
+            {"$or": [{"azure_id": azure_id}, {"email": email}]},
+            {"_id": 0}
+        )
         
         if existing_user:
-            # Mettre à jour la dernière connexion
-            await db.users.update_one(
-                {"azure_id": azure_id},
-                {
-                    "$set": {
-                        "last_login": datetime.now(timezone.utc).isoformat(),
-                        "email": email,  # Mettre à jour l'email si changé
-                        "name": name,  # Mettre à jour le nom si changé
+            # Si l'utilisateur existe mais n'a pas d'azure_id, le lier
+            if not existing_user.get("azure_id"):
+                logger.info(f"Liaison du compte Azure AD à l'utilisateur existant: {email}")
+                await db.users.update_one(
+                    {"email": email},
+                    {
+                        "$set": {
+                            "azure_id": azure_id,
+                            "id": azure_id,  # Mettre à jour l'ID principal
+                            "last_login": datetime.now(timezone.utc).isoformat(),
+                            "name": name,  # Mettre à jour le nom depuis Azure
+                        }
                     }
-                }
-            )
+                )
+                # Récupérer l'utilisateur mis à jour
+                existing_user = await db.users.find_one({"email": email}, {"_id": 0})
+            else:
+                # Mettre à jour la dernière connexion
+                await db.users.update_one(
+                    {"azure_id": azure_id},
+                    {
+                        "$set": {
+                            "last_login": datetime.now(timezone.utc).isoformat(),
+                            "email": email,
+                            "name": name,
+                        }
+                    }
+                )
             
-            logger.info(f"Utilisateur existant connecté: {email}")
+            logger.info(f"Utilisateur connecté: {email} (role: {existing_user.get('role')})")
             return existing_user
         
-        # Créer un nouvel utilisateur
-        # Le premier utilisateur devient admin, les suivants sont users
-        user_count = await db.users.count_documents({})
-        is_first_user = user_count == 0
+        # Créer un nouvel utilisateur Azure AD
+        # Vérifier combien d'utilisateurs avec azure_id existent (pas les anciens JWT)
+        azure_user_count = await db.users.count_documents({"azure_id": {"$exists": True, "$ne": None}})
+        is_first_azure_user = azure_user_count == 0
         
         new_user = {
             "id": azure_id,  # Utiliser l'Azure ID comme ID principal
             "azure_id": azure_id,
             "email": email,
             "name": name,
-            "role": "admin" if is_first_user else "user",
+            "role": "admin" if is_first_azure_user else "user",
             "service_id": None,
             "sub_service_id": None,
             "created_at": datetime.now(timezone.utc).isoformat(),
@@ -85,10 +106,10 @@ async def get_or_create_user_from_azure(azure_user: AzureUser, db: AsyncIOMotorD
         
         await db.users.insert_one(new_user)
         
-        logger.info(f"Nouvel utilisateur créé: {email} (role: {new_user['role']})")
+        logger.info(f"Nouvel utilisateur Azure AD créé: {email} (role: {new_user['role']})")
         
-        if is_first_user:
-            logger.warning(f"Premier utilisateur créé avec rôle ADMIN: {email}")
+        if is_first_azure_user:
+            logger.warning(f"Premier utilisateur Azure AD créé avec rôle ADMIN: {email}")
         
         # Retourner sans le champ _id de MongoDB
         return {k: v for k, v in new_user.items() if k != "_id"}
