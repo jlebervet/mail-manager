@@ -864,11 +864,57 @@ async def update_user_service(user_id: str, service_assignment: ServiceAssignmen
 
 @api_router.delete("/users/{user_id}")
 async def delete_user(user_id: str, admin_user: dict = Depends(require_admin)):
-    """Delete a user (admin only)"""
-    result = await db.users.delete_one({"id": user_id})
-    if result.deleted_count == 0:
+    """
+    Anonymiser un utilisateur (RGPD compliant)
+    Conserve l'historique des messages mais supprime les données personnelles
+    """
+    # Vérifier que l'utilisateur existe
+    user_to_delete = await db.users.find_one({"id": user_id}, {"_id": 0})
+    
+    if not user_to_delete:
         raise HTTPException(status_code=404, detail="User not found")
-    return {"message": "User deleted"}
+    
+    # Empêcher la suppression de soi-même
+    if user_to_delete["id"] == admin_user["sub"]:
+        raise HTTPException(status_code=400, detail="Vous ne pouvez pas supprimer votre propre compte")
+    
+    # Compter les messages associés à cet utilisateur
+    messages_count = await db.mails.count_documents({
+        "$or": [
+            {"opened_by_id": user_id},
+            {"assigned_to_id": user_id}
+        ]
+    })
+    
+    # Anonymiser les données personnelles (RGPD)
+    anonymized_data = {
+        "email": f"anonyme_{user_id}@supprime.rgpd",
+        "name": "Utilisateur Supprimé (RGPD)",
+        "password": None,
+        "azure_id": None,
+        "service_id": None,
+        "sub_service_id": None,
+        "is_deleted": True,
+        "deleted_at": datetime.now(timezone.utc).isoformat(),
+        "role": "user",  # Retirer les privilèges
+    }
+    
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": anonymized_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    logger.info(f"Utilisateur anonymisé (RGPD): {user_to_delete['email']} → {anonymized_data['email']}")
+    
+    return {
+        "message": "Utilisateur anonymisé avec succès (RGPD compliant)",
+        "user_email": user_to_delete["email"],
+        "messages_preserved": messages_count,
+        "anonymized_email": anonymized_data["email"]
+    }
 
 # ===== STATS ROUTES =====
 
