@@ -20,38 +20,13 @@ import { apiRequest } from "./authConfig";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Axios interceptor pour ajouter le token Azure AD
+// Axios interceptor pour ajouter le token JWT
 axios.interceptors.request.use(
-  async (config) => {
-    // Obtenir l'instance MSAL depuis le contexte
-    const msalInstance = window.msalInstance;
-    
-    if (msalInstance) {
-      const account = msalInstance.getActiveAccount();
-      
-      if (account) {
-        try {
-          // Acquérir le token silencieusement
-          const response = await msalInstance.acquireTokenSilent({
-            ...apiRequest,
-            account: account,
-          });
-          
-          config.headers.Authorization = `Bearer ${response.accessToken}`;
-        } catch (error) {
-          console.error("Erreur acquisition token:", error);
-          
-          // Si le token silencieux échoue, essayer avec popup
-          try {
-            const response = await msalInstance.acquireTokenPopup(apiRequest);
-            config.headers.Authorization = `Bearer ${response.accessToken}`;
-          } catch (popupError) {
-            console.error("Erreur popup token:", popupError);
-          }
-        }
-      }
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-    
     return config;
   },
   (error) => Promise.reject(error)
