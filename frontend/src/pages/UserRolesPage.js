@@ -230,15 +230,28 @@ const UserRolesPage = ({ user }) => {
             {users.map((u) => (
               <div
                 key={u.id}
-                className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                className={`flex items-center justify-between p-4 rounded-lg transition-colors ${
+                  isDeletedUser(u) ? 'bg-red-50 border border-red-200' : 'bg-slate-50 hover:bg-slate-100'
+                }`}
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium">
-                      {u.name.charAt(0).toUpperCase()}
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${
+                      isDeletedUser(u) ? 'bg-slate-400' : 'bg-blue-600'
+                    }`}>
+                      {isDeletedUser(u) ? <UserX className="h-5 w-5" /> : u.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <p className="font-medium text-slate-900">{u.name}</p>
+                      <div className="flex items-center gap-2">
+                        <p className={`font-medium ${isDeletedUser(u) ? 'text-slate-500' : 'text-slate-900'}`}>
+                          {u.name}
+                        </p>
+                        {isDeletedUser(u) && (
+                          <Badge variant="destructive" className="text-xs">
+                            Supprimé (RGPD)
+                          </Badge>
+                        )}
+                      </div>
                       <p className="text-sm text-slate-500">{u.email}</p>
                       {isCurrentUser(u.id) && (
                         <span className="text-xs text-blue-600 font-medium">
