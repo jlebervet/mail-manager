@@ -325,9 +325,21 @@ const UserRolesPage = ({ user }) => {
                     size="sm"
                     onClick={() => handleOpenPasswordDialog(u.id, u.name)}
                     className="flex items-center gap-2"
+                    disabled={isDeletedUser(u)}
                   >
                     <Key className="h-4 w-4" />
                     Mot de passe
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteUser(u.id, u.name, u.email)}
+                    className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                    disabled={isCurrentUser(u.id) || isDeletedUser(u)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Supprimer (RGPD)
                   </Button>
                 </div>
               </div>
