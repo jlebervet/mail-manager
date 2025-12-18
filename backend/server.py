@@ -63,6 +63,8 @@ class User(BaseModel):
     sub_service_id: Optional[str] = None  # Sub-service assigned to user
     azure_id: Optional[str] = None  # Azure AD Object ID
     last_login: Optional[str] = None  # Dernière connexion
+    is_deleted: bool = False  # Marqueur de suppression RGPD
+    deleted_at: Optional[str] = None  # Date de suppression
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class UserCreate(BaseModel):
