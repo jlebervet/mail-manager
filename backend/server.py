@@ -287,11 +287,97 @@ class AzureLoginRequest(BaseModel):
     email: str
     name: str
 
+@api_router.post("/auth/azure/callback")
+async def azure_callback(login_data: AzureLoginRequest):
+    """
+    Endpoint NON protégé appelé après connexion Azure AD réussie
+    Crée ou récupère l'utilisateur dans MongoDB
+    """
+    try:
+        azure_id = login_data.oid
+        email = login_data.email
+        name = login_data.name
+        
+        logger.info(f"Callback Azure AD pour: {email} (Azure ID: {azure_id})")
+        
+        # Chercher l'utilisateur existant par Azure ID OU par email
+        existing_user = await db.users.find_one(
+            {"$or": [{"azure_id": azure_id}, {"email": email}]},
+            {"_id": 0}
+        )
+        
+        if existing_user:
+            # Si l'utilisateur existe mais n'a pas d'azure_id, le lier
+            if not existing_user.get("azure_id"):
+                logger.info(f"Liaison du compte Azure AD à l'utilisateur existant: {email}")
+                await db.users.update_one(
+                    {"email": email},
+                    {
+                        "$set": {
+                            "azure_id": azure_id,
+                            "last_login": datetime.now(timezone.utc).isoformat(),
+                            "name": name,
+                        }
+                    }
+                )
+                # Récupérer l'utilisateur mis à jour
+                existing_user = await db.users.find_one({"email": email}, {"_id": 0})
+            else:
+                # Mettre à jour la dernière connexion
+                await db.users.update_one(
+                    {"azure_id": azure_id},
+                    {
+                        "$set": {
+                            "last_login": datetime.now(timezone.utc).isoformat(),
+                            "email": email,
+                            "name": name,
+                        }
+                    }
+                )
+            
+            logger.info(f"Utilisateur connecté: {email} (role: {existing_user.get('role')})")
+            
+            # Créer un token JWT pour la compatibilité avec le reste de l'app
+            token = create_token(existing_user)
+            return {"token": token, "user": existing_user}
+        
+        # Créer un nouvel utilisateur Azure AD
+        azure_user_count = await db.users.count_documents({"azure_id": {"$exists": True, "$ne": None}})
+        is_first_azure_user = azure_user_count == 0
+        
+        new_user = {
+            "id": azure_id,
+            "azure_id": azure_id,
+            "email": email,
+            "name": name,
+            "role": "admin" if is_first_azure_user else "user",
+            "service_id": None,
+            "sub_service_id": None,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "last_login": datetime.now(timezone.utc).isoformat(),
+            "password": None,
+        }
+        
+        await db.users.insert_one(new_user)
+        logger.info(f"Nouvel utilisateur Azure AD créé: {email} (role: {new_user['role']})")
+        
+        user_without_id = {k: v for k, v in new_user.items() if k != "_id"}
+        
+        # Créer un token JWT pour la compatibilité
+        token = create_token(user_without_id)
+        return {"token": token, "user": user_without_id}
+        
+    except Exception as e:
+        logger.error(f"Erreur callback Azure: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur: {str(e)}"
+        )
+
 @api_router.post("/auth/azure/login")
 async def azure_login(login_data: AzureLoginRequest, azure_user = Security(azure_scheme)):
     """
-    Endpoint appelé après connexion Azure AD réussie
-    Crée l'utilisateur dans MongoDB s'il n'existe pas
+    Endpoint protégé pour Azure AD (pour référence)
     """
     from auth_dependencies import get_or_create_user_from_azure
     user_info = await get_or_create_user_from_azure(azure_user, db)
