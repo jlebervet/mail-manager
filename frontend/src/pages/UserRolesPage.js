@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Badge } from "../components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "../components/ui/dialog";
 import { toast } from "sonner";
-import { Shield, User, UserCog, AlertCircle, Key } from "lucide-react";
+import { Shield, User, UserCog, AlertCircle, Key, Trash2, UserX } from "lucide-react";
 import { API } from "../App";
 import {
   AlertDialog,
