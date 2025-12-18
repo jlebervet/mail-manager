@@ -29,6 +29,8 @@ const UserRolesPage = ({ user }) => {
   const [newRole, setNewRole] = useState("");
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
   const [passwordData, setPasswordData] = useState({ userId: "", userName: "", newPassword: "", confirmPassword: "" });
 
   useEffect(() => {
