@@ -257,12 +257,19 @@ async def require_admin(current_user: dict = Depends(get_current_user)):
 
 @api_router.post("/auth/login", response_model=LoginResponse)
 async def login(credentials: LoginRequest):
-    """Mocked Azure AD login"""
+    """JWT login pour anciens utilisateurs uniquement"""
     # Find user in database
     user_doc = await db.users.find_one({"email": credentials.email}, {"_id": 0})
     
     if not user_doc:
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Vérifier que l'utilisateur a un mot de passe (pas un compte Azure AD seulement)
+    if user_doc.get("password") is None:
+        raise HTTPException(
+            status_code=401, 
+            detail="Ce compte utilise l'authentification Microsoft. Utilisez le bouton 'Se connecter avec Microsoft'."
+        )
     
     # Check password (in production, use proper hashing)
     if user_doc["password"] != credentials.password:
