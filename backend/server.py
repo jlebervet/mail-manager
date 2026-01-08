@@ -585,14 +585,27 @@ async def get_mails(
     if service_id:
         query["service_id"] = service_id
     
-    # If user is not admin and has a service_id, filter by their service
-    # Check both service_id (single) and service_ids (multiple) for backward compatibility
-    if current_user.get("role") != "admin" and current_user.get("service_id"):
+    # If user is not admin, filter by their service OR if they are a final recipient
+    if current_user.get("role") != "admin":
         user_service = current_user.get("service_id")
-        query["$or"] = [
-            {"service_id": user_service},
-            {"service_ids": user_service}
-        ]
+        user_id = current_user.get("sub") or current_user.get("id")
+        user_email = current_user.get("email")
+        
+        # Construire les conditions de filtrage
+        or_conditions = []
+        
+        # Messages du service de l'utilisateur
+        if user_service:
+            or_conditions.append({"service_id": user_service})
+            or_conditions.append({"service_ids": user_service})
+        
+        # Messages dont l'utilisateur est destinataire final (par ID ou email)
+        or_conditions.append({"final_recipient_ids": user_id})
+        or_conditions.append({"final_recipient_ids": user_email})
+        or_conditions.append({"final_recipient_emails": user_email})
+        
+        if or_conditions:
+            query["$or"] = or_conditions
     
     mails = await db.mails.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
     
