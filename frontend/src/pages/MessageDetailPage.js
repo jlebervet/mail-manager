@@ -552,6 +552,8 @@ const MessageDetailPage = ({ user }) => {
           sub_service_name: subServiceData?.name || null,
           sub_service_ids: sub_service_ids,
           sub_service_names: sub_service_names,
+          final_recipient_ids: final_recipient_ids,
+          final_recipient_emails: final_recipient_emails,
           message_type: messageType,
           is_registered: isRegistered,
           registered_number: isRegistered ? registeredNumber : null,
