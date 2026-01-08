@@ -416,8 +416,6 @@ const MessageDetailPage = ({ user }) => {
       toast.error("Erreur lors de la création de l'utilisateur");
     }
   };
-    return service?.sub_services || [];
-  };
 
   const handleSave = async () => {
     if (!subject || !content || !selectedCorrespondent) {
