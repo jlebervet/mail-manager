@@ -1321,6 +1321,74 @@ const MessageDetailPage = ({ user }) => {
         onClose={() => setShowBarcodeScanner(false)}
         onScan={handleBarcodeScan}
       />
+
+      {/* New User Creation Dialog */}
+      <Dialog open={showNewUserDialog} onOpenChange={setShowNewUserDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5" />
+              Créer un Nouvel Utilisateur
+            </DialogTitle>
+            <DialogDescription>
+              Créez un utilisateur qui aura accès aux messages de ce service lors de sa première connexion avec Microsoft.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-user-email">Adresse Email Microsoft *</Label>
+              <Input
+                id="new-user-email"
+                type="email"
+                placeholder="utilisateur@domaine.fr"
+                value={newUserEmail}
+                onChange={(e) => setNewUserEmail(e.target.value)}
+                autoFocus
+              />
+              <p className="text-xs text-slate-500">
+                L'utilisateur pourra se connecter avec ce compte Microsoft et aura accès aux messages de son service.
+              </p>
+            </div>
+
+            {newUserServiceIndex !== null && selectedServices[newUserServiceIndex] && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm font-medium text-blue-900 mb-1">Service assigné :</p>
+                <p className="text-sm text-blue-800">
+                  {services.find(s => s.id === selectedServices[newUserServiceIndex].service_id)?.name || "Service"}
+                  {selectedServices[newUserServiceIndex].sub_service_id && (
+                    <span className="text-xs">
+                      {" / "}
+                      {getSubServicesForService(selectedServices[newUserServiceIndex].service_id)
+                        .find(ss => ss.id === selectedServices[newUserServiceIndex].sub_service_id)?.name}
+                    </span>
+                  )}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowNewUserDialog(false);
+                setNewUserEmail("");
+                setNewUserServiceIndex(null);
+              }}
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={handleCreatePendingUser}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <UserPlus className="mr-2 h-4 w-4" />
+              Créer l'utilisateur
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
