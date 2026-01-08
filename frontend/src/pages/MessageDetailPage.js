@@ -87,7 +87,8 @@ const MessageDetailPage = ({ user }) => {
         });
         setSelectedServices([{
           service_id: parsed.service_id,
-          sub_service_id: parsed.sub_service_id
+          sub_service_id: parsed.sub_service_id,
+          final_recipient_id: null
         }]);
       }
     }
