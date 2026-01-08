@@ -1,0 +1,120 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # Traefik - Reverse Proxy avec Dashboard
+  # ============================================
+  traefik:
+    image: traefik:v2.10
+    container_name: mail-manager-traefik
+    restart: unless-stopped
+    command:
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.traefik.address=:8080"
+    ports:
+      - "8080:80"       # HTTP
+      - "8443:443"      # HTTPS
+      - "8081:8080"     # Dashboard Traefik
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-certificates:/letsencrypt
+    networks:
+      - mail-manager-network
+
+  # ============================================
+  # MongoDB
+  # ============================================
+  mongodb:
+    image: mongo:7.0
+    container_name: mail-manager-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-changeme123}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE:-mail_management_db}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - mail-manager-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ============================================
+  # Backend API (FastAPI)
+  # ============================================
+  backend:
+    build:
+      context: https://github.com/VOTRE-UTILISATEUR/VOTRE-REPO.git#main:backend
+      dockerfile: Dockerfile
+    container_name: mail-manager-backend
+    restart: unless-stopped
+    environment:
+      - MONGO_URL=mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-changeme123}@mongodb:27017
+      - DB_NAME=${MONGO_INITDB_DATABASE:-mail_management_db}
+      - CORS_ORIGINS=*
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID}
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+      - AZURE_SCOPE=${AZURE_SCOPE}
+      - JWT_SECRET=${JWT_SECRET:-fallback_secret_key_2025}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.entrypoints=web,websecure"
+      - "traefik.http.services.backend.loadbalancer.server.port=8888"
+      - "traefik.http.middlewares.backend-stripprefix.stripprefix.prefixes=/api"
+    expose:
+      - "8888"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - mail-manager-network
+    command: uvicorn server:app --host 0.0.0.0 --port 8888
+
+  # ============================================
+  # Frontend (React + Nginx)
+  # ============================================
+  frontend:
+    build:
+      context: https://github.com/VOTRE-UTILISATEUR/VOTRE-REPO.git#main:frontend
+      dockerfile: Dockerfile.simple
+      args:
+        - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-http://localhost:8080}
+        - REACT_APP_AZURE_CLIENT_ID=${REACT_APP_AZURE_CLIENT_ID}
+        - REACT_APP_AZURE_TENANT_ID=${REACT_APP_AZURE_TENANT_ID}
+        - REACT_APP_AZURE_REDIRECT_URI=${REACT_APP_AZURE_REDIRECT_URI}
+        - REACT_APP_AZURE_SCOPE=${REACT_APP_AZURE_SCOPE}
+    container_name: mail-manager-frontend
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.entrypoints=web,websecure"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+    expose:
+      - "80"
+    depends_on:
+      - backend
+    networks:
+      - mail-manager-network
+
+networks:
+  mail-manager-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
+  traefik-certificates:
+    driver: local
