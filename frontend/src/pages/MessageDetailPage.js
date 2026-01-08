@@ -448,7 +448,7 @@ const MessageDetailPage = ({ user }) => {
         ? serviceData?.sub_services.find(ss => ss.id === primaryService.sub_service_id)
         : null;
 
-      // Collecter tous les service_ids, service_names, sub_service_ids, sub_service_names
+      // Collecter tous les service_ids, service_names, sub_service_ids, sub_service_names, final_recipients
       const service_ids = validServices.map(s => s.service_id);
       const service_names = validServices.map(s => {
         const svc = services.find(srv => srv.id === s.service_id);
@@ -460,6 +460,12 @@ const MessageDetailPage = ({ user }) => {
         const svc = services.find(srv => srv.id === s.service_id);
         const subSvc = svc?.sub_services.find(ss => ss.id === s.sub_service_id);
         return subSvc?.name || null;
+      });
+      const final_recipient_ids = validServices.map(s => s.final_recipient_id || null);
+      const final_recipient_emails = validServices.map(s => {
+        if (!s.final_recipient_id) return null;
+        const usr = users.find(u => u.id === s.final_recipient_id);
+        return usr?.email || null;
       });
 
       if (isNew) {
