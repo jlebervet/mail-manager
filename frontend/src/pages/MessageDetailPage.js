@@ -33,7 +33,11 @@ const MessageDetailPage = ({ user }) => {
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
   const [selectedCorrespondent, setSelectedCorrespondent] = useState(null);
-  const [selectedServices, setSelectedServices] = useState([{ service_id: null, sub_service_id: null }]); // Multiple destinataires
+  const [selectedServices, setSelectedServices] = useState([{ 
+    service_id: null, 
+    sub_service_id: null, 
+    final_recipient_id: null 
+  }]); // Multiple destinataires avec destinataire final
   const [status, setStatus] = useState("recu");
   const [comment, setComment] = useState("");
   const [assignedTo, setAssignedTo] = useState(null);
@@ -44,6 +48,9 @@ const MessageDetailPage = ({ user }) => {
   const [registeredNumber, setRegisteredNumber] = useState("");
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [noResponseNeeded, setNoResponseNeeded] = useState(false);
+  const [showNewUserDialog, setShowNewUserDialog] = useState(false);
+  const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserServiceIndex, setNewUserServiceIndex] = useState(null);
   
   const [correspondents, setCorrespondents] = useState([]);
   const [services, setServices] = useState([]);
