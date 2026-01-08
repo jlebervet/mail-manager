@@ -336,7 +336,7 @@ const MessageDetailPage = ({ user }) => {
 
   // Fonctions pour gérer les destinataires multiples
   const addDestinataireField = () => {
-    setSelectedServices([...selectedServices, { service_id: null, sub_service_id: null }]);
+    setSelectedServices([...selectedServices, { service_id: null, sub_service_id: null, final_recipient_id: null }]);
   };
 
   const removeDestinataireField = (index) => {
@@ -349,15 +349,73 @@ const MessageDetailPage = ({ user }) => {
   const updateDestinataire = (index, field, value) => {
     const newServices = [...selectedServices];
     newServices[index][field] = value;
-    // Reset sub_service when service changes
+    // Reset sub_service and final_recipient when service changes
     if (field === 'service_id') {
       newServices[index]['sub_service_id'] = null;
+      newServices[index]['final_recipient_id'] = null;
+    }
+    // Reset final_recipient when sub_service changes
+    if (field === 'sub_service_id') {
+      newServices[index]['final_recipient_id'] = null;
     }
     setSelectedServices(newServices);
   };
 
   const getSubServicesForService = (serviceId) => {
     const service = services.find(s => s.id === serviceId);
+    return service?.sub_services || [];
+  };
+
+  const getUsersForService = (serviceId, subServiceId = null) => {
+    if (!serviceId) return [];
+    
+    return users.filter(u => {
+      if (u.is_deleted) return false;  // Exclure les utilisateurs supprimés
+      if (u.service_id !== serviceId) return false;
+      if (subServiceId && u.sub_service_id !== subServiceId) return false;
+      return true;
+    });
+  };
+
+  const handleOpenNewUserDialog = (serviceIndex) => {
+    setNewUserServiceIndex(serviceIndex);
+    setNewUserEmail("");
+    setShowNewUserDialog(true);
+  };
+
+  const handleCreatePendingUser = async () => {
+    if (!newUserEmail || !newUserEmail.includes('@')) {
+      toast.error("Veuillez saisir une adresse email valide");
+      return;
+    }
+
+    const serviceIndex = newUserServiceIndex;
+    const serviceData = selectedServices[serviceIndex];
+
+    try {
+      const response = await axios.post(`${API}/users/create-pending`, {
+        email: newUserEmail,
+        service_id: serviceData.service_id,
+        sub_service_id: serviceData.sub_service_id
+      });
+
+      toast.success(`Utilisateur ${newUserEmail} créé avec succès`);
+      
+      // Rafraîchir la liste des utilisateurs
+      await fetchUsers();
+      
+      // Sélectionner automatiquement le nouvel utilisateur
+      updateDestinataire(serviceIndex, 'final_recipient_id', response.data.id);
+      
+      // Fermer le dialogue
+      setShowNewUserDialog(false);
+      setNewUserEmail("");
+      setNewUserServiceIndex(null);
+    } catch (error) {
+      console.error("Error creating pending user:", error);
+      toast.error("Erreur lors de la création de l'utilisateur");
+    }
+  };
     return service?.sub_services || [];
   };
 
