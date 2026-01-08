@@ -123,14 +123,16 @@ const MessageDetailPage = ({ user }) => {
       if (mailData.service_ids && mailData.service_ids.length > 0) {
         const servicesData = mailData.service_ids.map((sid, idx) => ({
           service_id: sid,
-          sub_service_id: idx === 0 ? mailData.sub_service_id : null
+          sub_service_id: mailData.sub_service_ids ? mailData.sub_service_ids[idx] : null,
+          final_recipient_id: mailData.final_recipient_ids ? mailData.final_recipient_ids[idx] : null
         }));
         setSelectedServices(servicesData);
       } else {
         // Compatibilité avec l'ancien format
         setSelectedServices([{
           service_id: mailData.service_id,
-          sub_service_id: mailData.sub_service_id
+          sub_service_id: mailData.sub_service_id,
+          final_recipient_id: null
         }]);
       }
       
