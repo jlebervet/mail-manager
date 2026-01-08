@@ -206,6 +206,8 @@ class MailUpdate(BaseModel):
     sub_service_name: Optional[str] = None
     sub_service_ids: Optional[List[str]] = None
     sub_service_names: Optional[List[str]] = None
+    final_recipient_ids: Optional[List[str]] = None
+    final_recipient_emails: Optional[List[str]] = None
     message_type: Optional[str] = None
     is_registered: Optional[bool] = None
     registered_number: Optional[str] = None
