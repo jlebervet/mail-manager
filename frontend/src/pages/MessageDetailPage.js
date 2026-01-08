@@ -983,13 +983,13 @@ const MessageDetailPage = ({ user }) => {
                       </div>
                     </div>
 
-                    {/* Destinataire final (utilisateur) - Affiche si un service est sélectionné */}
-                    {destinataire.service_id && destinataire.service_id !== "" && destinataire.service_id !== "none" && (
-                      <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <div className="flex items-center justify-between mb-2">
-                          <Label className="text-sm font-medium text-blue-900">
-                            Destinataire final (optionnel)
-                          </Label>
+                    {/* Destinataire final (utilisateur) - TOUJOURS VISIBLE pour debug */}
+                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <Label className="text-sm font-medium text-blue-900">
+                          Destinataire final (optionnel)
+                        </Label>
+                        {destinataire.service_id && (
                           <Button
                             type="button"
                             variant="ghost"
@@ -1001,33 +1001,41 @@ const MessageDetailPage = ({ user }) => {
                             <UserPlus className="h-3 w-3 mr-1" />
                             Créer un utilisateur
                           </Button>
-                        </div>
-                        
-                        <Select
-                          value={destinataire.final_recipient_id || "none"}
-                          onValueChange={(value) => updateDestinataire(index, 'final_recipient_id', value === "none" ? null : value)}
-                          disabled={!isNew && user?.role !== "admin"}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Tous les utilisateurs du service" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">Tous les utilisateurs du service</SelectItem>
-                            {getUsersForService(destinataire.service_id, destinataire.sub_service_id).map((usr) => (
-                              <SelectItem key={usr.id} value={usr.id}>
-                                {usr.name} ({usr.email})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        
-                        {getUsersForService(destinataire.service_id, destinataire.sub_service_id).length === 0 && (
-                          <p className="text-xs text-amber-600 mt-2">
-                            ⚠️ Aucun utilisateur dans ce service. Créez-en un pour un ciblage précis.
-                          </p>
                         )}
                       </div>
-                    )}
+                      
+                      {!destinataire.service_id ? (
+                        <p className="text-xs text-slate-500 italic">
+                          Sélectionnez d'abord un service pour choisir un destinataire précis
+                        </p>
+                      ) : (
+                        <>
+                          <Select
+                            value={destinataire.final_recipient_id || "none"}
+                            onValueChange={(value) => updateDestinataire(index, 'final_recipient_id', value === "none" ? null : value)}
+                            disabled={!isNew && user?.role !== "admin"}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Tous les utilisateurs du service" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">Tous les utilisateurs du service</SelectItem>
+                              {getUsersForService(destinataire.service_id, destinataire.sub_service_id).map((usr) => (
+                                <SelectItem key={usr.id} value={usr.id}>
+                                  {usr.name} ({usr.email})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          
+                          {getUsersForService(destinataire.service_id, destinataire.sub_service_id).length === 0 && (
+                            <p className="text-xs text-amber-600 mt-2">
+                              ⚠️ Aucun utilisateur dans ce service. Créez-en un pour un ciblage précis.
+                            </p>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
