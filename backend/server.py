@@ -866,6 +866,45 @@ async def update_user_service(user_id: str, service_assignment: ServiceAssignmen
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "Service utilisateur mis à jour avec succès"}
 
+class PendingUserCreate(BaseModel):
+    email: str
+    service_id: str
+    sub_service_id: Optional[str] = None
+
+@api_router.post("/users/create-pending", response_model=User)
+async def create_pending_user(user_data: PendingUserCreate, current_user: dict = Depends(get_current_user)):
+    """
+    Créer un utilisateur 'en attente' avec juste son email et son service
+    Cet utilisateur pourra se connecter plus tard avec Microsoft
+    """
+    # Vérifier si l'utilisateur existe déjà
+    existing = await db.users.find_one({"email": user_data.email})
+    if existing:
+        # Si l'utilisateur existe déjà, le retourner
+        if isinstance(existing.get('created_at'), str):
+            existing['created_at'] = datetime.fromisoformat(existing['created_at'])
+        return User(**existing)
+    
+    # Créer un nouvel utilisateur en attente
+    new_user = User(
+        email=user_data.email,
+        name=user_data.email.split('@')[0].replace('.', ' ').title(),  # Nom temporaire depuis email
+        password=None,  # Pas de mot de passe, utilisera Azure AD
+        role="user",
+        service_id=user_data.service_id,
+        sub_service_id=user_data.sub_service_id,
+        azure_id=None,  # Sera rempli à la première connexion
+    )
+    
+    doc = new_user.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.users.insert_one(doc)
+    
+    logger.info(f"Utilisateur en attente créé: {user_data.email} (service: {user_data.service_id})")
+    
+    return new_user
+
 @api_router.delete("/users/{user_id}")
 async def delete_user(user_id: str, admin_user: dict = Depends(require_admin)):
     """
