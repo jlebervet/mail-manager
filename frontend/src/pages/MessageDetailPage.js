@@ -980,8 +980,8 @@ const MessageDetailPage = ({ user }) => {
                       </div>
                     </div>
 
-                    {/* Destinataire final (utilisateur) */}
-                    {destinataire.service_id && (
+                    {/* Destinataire final (utilisateur) - Affiche si un service est sélectionné */}
+                    {destinataire.service_id && destinataire.service_id !== "" && destinataire.service_id !== "none" && (
                       <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <Label className="text-sm font-medium text-blue-900">
