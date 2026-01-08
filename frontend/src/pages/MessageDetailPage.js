@@ -494,6 +494,8 @@ const MessageDetailPage = ({ user }) => {
           sub_service_name: subServiceData?.name || null,  // Primary sub-service name
           sub_service_ids: sub_service_ids,  // Tous les sous-services
           sub_service_names: sub_service_names,  // Tous les noms de sous-services
+          final_recipient_ids: final_recipient_ids,  // Destinataires finaux
+          final_recipient_emails: final_recipient_emails,  // Emails destinataires finaux
           parent_mail_id: parentMailId,
           parent_mail_reference: parentMailReference,
           message_type: messageType,
