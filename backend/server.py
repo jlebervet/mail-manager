@@ -150,6 +150,8 @@ class Mail(BaseModel):
     sub_service_name: Optional[str] = None  # Primary sub-service name (pour compatibilité)
     sub_service_ids: Optional[List[str]] = None  # Multiple sous-services pour chaque destinataire
     sub_service_names: Optional[List[str]] = None  # Multiple sous-services names
+    final_recipient_ids: Optional[List[str]] = None  # Utilisateurs destinataires finaux
+    final_recipient_emails: Optional[List[str]] = None  # Emails des destinataires finaux
     assigned_to_id: Optional[str] = None
     assigned_to_name: Optional[str] = None
     status: str = "recu"  # "recu", "traitement", "traite", "archive"
